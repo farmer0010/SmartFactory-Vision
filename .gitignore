@@ -1,0 +1,34 @@
+.gradle/
+build/
+bin/
+out/
+
+# JPyRust / Python temporary files
+temp_extract/
+*.log
+*.txt
+
+# Large binaries and archives
+*.zip
+*.pt
+*.jar
+*.exe
+*.dll
+*.so
+*.dylib
+libs/
+src/main/resources/natives/
+src/main/resources/python_dist.zip
+python_dist/
+
+# IDE files
+.idea/
+*.iml
+.vscode/
+.settings/
+.project/
+.classpath/
+
+# OS files
+Thumbs.db
+Desktop.ini
