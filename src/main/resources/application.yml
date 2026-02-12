@@ -3,7 +3,22 @@ server:
 spring:
   application:
     name: SmartFactory-Vision
+  datasource:
+    url: jdbc:h2:file:C:/Users/김주영/.jpyrust/historydb;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: 
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    database-platform: org.hibernate.dialect.H2Dialect
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
 app:
   ai:
-    work-dir: C:/jpyrust_temp
+    work-dir: C:/Users/김주영/.jpyrust
     model-path: yolov8n.pt

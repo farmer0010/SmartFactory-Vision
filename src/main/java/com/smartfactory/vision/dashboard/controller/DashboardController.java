@@ -10,4 +10,9 @@ public class DashboardController {
     public String index() {
         return "index";
     }
+
+    @GetMapping("/history")
+    public String history() {
+        return "history";
+    }
 }

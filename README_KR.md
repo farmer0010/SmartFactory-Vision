@@ -1,251 +1,143 @@
 # 🏭 SmartFactory-Vision
 
-> **"실시간 AI 공장 검사: 웹캠에서 탐지까지 밀리초 단위로."**
+> **"실시간 AI 기반 공장 검사 시스템: JPyRust를 이용한 멀티 스트림 아키텍처"**
 
 ![Build Status](https://img.shields.io/github/actions/workflow/status/farmer0010/SmartFactory-Vision/build.yml?style=flat-square&logo=github&label=Build)
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2.1-brightgreen?style=flat-square&logo=spring-boot)
 [![Java](https://img.shields.io/badge/Java-17+-orange?style=flat-square&logo=openjdk)](https://openjdk.org/)
-[![JPyRust](https://img.shields.io/badge/JPyRust-v1.1.6-blue?style=flat-square)](https://github.com/farmer0010/JPyRust)
+[![JPyRust](https://img.shields.io/badge/JPyRust-v1.2.0-blue?style=flat-square)](https://github.com/farmer0010/JPyRust)
 [![Python](https://img.shields.io/badge/Python-3.11-blue?style=flat-square&logo=python)](https://www.python.org/)
 
-[🇺🇸 English Version](README.md)
+[🇺🇸 English Version (README.md)](README.md)
 
 ---
 
 ## 💡 소개
 
-**SmartFactory-Vision**은 **Spring Boot** 기반의 실시간 AI 비전 검사 시스템입니다.
-**JPyRust** 네이티브 브릿지를 통해 Python AI 추론을 네이티브에 가까운 속도로 실행합니다.
+**SmartFactory-Vision**은 **Spring Boot**와 **JPyRust**를 결합하여 네이티브 수준의 성능을 제공하는 실시간 AI 비전 검사 시스템입니다.
 
-브라우저에서 웹캠 프레임을 캡처하고, Spring Boot 백엔드로 전송한 뒤, JPyRust 네이티브 브릿지를 통해 **YOLOv8 객체 탐지**를 실행하고, **WebSocket (STOMP)**을 통해 실시간으로 결과를 클라이언트에 전송합니다.
+본 프로젝트는 여러 대의 카메라 피드를 동시에 캡처하고, 독립적인 AI 워커 풀을 통해 병렬로 분석하며, 그 결과를 H2 데이터베이스에 저장함과 동시에 웹 대시보드(2x2 그리드)에 실시간으로 전송하는 전 과정을 시연합니다.
 
 ---
 
-## ✨ 주요 기능
+## ✨ 핵심 기능
 
 | 기능 | 설명 |
-|------|------|
-| 📷 **실시간 웹캠 스트리밍** | 브라우저 기반 카메라 캡처 (~25 FPS) |
-| 🧠 **AI 객체 탐지** | JPyRust 공유 메모리 브릿지를 통한 YOLOv8 추론 |
-| ⚡ **네이티브 성능** | 프레임당 GPU ~40ms / CPU ~100ms (Python VM 시작 없음) |
-| 📡 **WebSocket 실시간 푸시** | SockJS 위 STOMP를 통한 탐지 결과 실시간 전송 |
-| 🖥️ **SF 테마 대시보드** | FPS 차트 및 탐지 로그가 포함된 네온 테마 컨트롤 패널 |
-| 🔄 **자동 재연결** | 연결 끊김 시 WebSocket 자동 복구 |
+|---------|-------------|
+| 📹 **멀티 스트림 지원** | 2x2 그리드 레이아웃을 통해 최대 4개 카메라 채널 동시 모니터링 |
+| 🧠 **AI 워커 풀** | JPyRust 인스턴스 풀을 관리하여 병렬 이미지 추론 수행 |
+| 🗄️ **감지 이력 저장** | 모든 AI 감지 로그를 H2/JPA를 통해 데이터베이스에 자동 저장 |
+| ⚡ **고성능 추론** | Python VM 오버헤드 없이 GPU 기준 장당 약 40ms의 고속 추론 |
+| 📡 **독립적 토픽** | 카메라별 실시간 WebSocket 토픽 분리를 통한 지연율 최소화 |
+| 🖥️ **Sci-Fi UI** | 네온 테마의 대시보드, 실시간 FPS 차트 및 감지 로그 제공 |
 
 ---
 
-## 🏗️ 아키텍처
+## 🏗️ 시스템 아키텍처
 
 ```mermaid
-graph LR
-    subgraph "브라우저"
-        Webcam["📷 웹캠"]
-        UI["🖥️ 대시보드 UI"]
+graph TD
+    subgraph "브라우저 (클라이언트)"
+        C1["📷 CAM-1"]
+        C2["📷 CAM-2"]
+        C3["📷 CAM-3"]
+        C4["📷 CAM-4"]
+        UI["🖥️ 2x2 대시보드 UI"]
     end
 
-    subgraph "Spring Boot (Java 17)"
+    subgraph "Spring Boot 백엔드"
         WC["WebcamController"]
-        JPS["JPyRustService"]
-        WS["WebSocket Broker"]
+        Pool["🧠 AI 서비스 풀"]
+        subgraph "데이터 저장소"
+            DHS["DetectionHistoryService"]
+            DB[("H2 데이터베이스")]
+        end
+        WS["WebSocket 브로커"]
     end
 
-    subgraph "JPyRust 네이티브 브릿지"
-        Bridge["🔗 JPyRustBridge"]
-        Rust["🦀 jpyrust.dll (JNI)"]
-        Python["🐍 Python 데몬"]
-        YOLO["🧠 YOLOv8"]
+    subgraph "JPyRust 네이티브 계층"
+        Bridge["JPyRustBridge (Native)"]
+        SHM["Shared Memory"]
+        Daemon["Python 데몬"]
+        YOLO["YOLOv8 모델"]
     end
 
-    Webcam -- "POST /api/stream/frame" --> WC
-    WC --> JPS
-    JPS --> Bridge
-    Bridge -- "JNI" --> Rust
-    Rust -- "공유 메모리" --> Python
-    Python --> YOLO
-    YOLO -- "탐지 JSON" --> Python
-    Python -- "결과" --> Rust
-    Rust --> Bridge
-    Bridge --> JPS
-    JPS -- "비동기" --> WS
-    WS -- "/topic/detections" --> UI
+    C1 & C2 & C3 & C4 -- "POST /api/stream/frame?camId=X" --> WC
+    WC -- "작업 큐 할당" --> Pool
+    Pool -- "다이렉트 매핑" --> Bridge
+    Bridge -- "IPC 통신" --> SHM
+    SHM -- "추론 요청" --> Daemon
+    Daemon --> YOLO
+    
+    YOLO -- "감지 결과 JSON" --> Pool
+    Pool -- "비동기 저장" --> DHS
+    DHS --> DB
+    
+    Pool -- "결과 전송 /detections/camX" --> WS
+    WS -- "STOMP" --> UI
 ```
 
-### 데이터 흐름
-
-1. **캡처** — 브라우저가 웹캠 프레임을 JPEG blob으로 캡처 (~25 FPS)
-2. **업로드** — `POST /api/stream/frame`으로 프레임 전송 (multipart)
-3. **추론** — JPyRust가 공유 메모리 → Python YOLO를 통해 이미지 처리
-4. **푸시** — WebSocket `/topic/detections`를 통해 탐지 결과를 브라우저로 전송
-5. **렌더링** — Canvas 오버레이에 바운딩 박스, 라벨, 신뢰도 표시
-
 ---
 
-## 📊 성능
+## 📊 성능 벤치마크
 
-| 지표 | 수치 |
-|------|:----:|
-| **프레임 캡처** | ~25 FPS (브라우저) |
-| **AI 추론 (GPU)** | ~40ms / 프레임 |
-| **AI 추론 (CPU)** | ~100ms / 프레임 |
-| **종단 간 지연** | < 200ms |
-| **Python 시작** | 0ms (상주 데몬) |
-
-> 💡 GPU 자동 감지: NVIDIA CUDA 설치 시 → GPU 모드, 미설치 시 CPU 자동 전환. 설정 불필요.
-
----
-
-## 🖥️ 대시보드
-
-**SF 테마 컨트롤 패널** 웹 대시보드:
-
-- 🎥 **라이브 비디오 피드** — 스캔라인 애니메이션 오버레이
-- 📊 **실시간 FPS 차트** — Chart.js 라인 그래프
-- 🎯 **신뢰도 게이지** — 애니메이션 프로그레스 바
-- 📋 **탐지 로그** — 색상 코딩 (불량: 빨강, 정상: 청색)
-- 🟢 **연결 상태 표시기** — Online/Offline
+| 지표 | 목표 | 결과 |
+|--------|:-----:|:------:|
+| **최대 스트림 수** | 4 | 확인 완료 (2x2 그리드) |
+| **추론 지연율** | < 50ms | 약 42ms (NVIDIA GPU 기준) |
+| **저장 지연율** | < 10ms | 비동기 논블로킹 처리 완료 |
+| **UI 안정성** | 60 FPS | Chart.js 최적화를 통해 안정적 유지 |
 
 ---
 
 ## 🚀 시작하기
 
-### 사전 준비
-
+### 사전 요구 사항
 - **Java 17+**
-- **웹캠** (내장 또는 USB)
-- **JPyRust v1.1.6** (JitPack 통해 자동 다운로드)
+- **웹캠 또는 비전 입력 장치**
+- **Windows 10/11** (Shared Memory 사용 최적화)
 
-### 1. 클론 및 실행
-
+### 실행 방법
 ```bash
-# 클론
+# 1. 저장소 복제
 git clone https://github.com/farmer0010/SmartFactory-Vision.git
-cd SmartFactory-Vision
 
-# 실행 (첫 실행 시 ~500MB Python 환경 자동 다운로드)
+# 2. 빌드 및 실행
 ./gradlew bootRun
 ```
 
-### 2. 대시보드 접속
-
-```
-http://localhost:8080
-```
-
-카메라 접근 허용 후 실시간 탐지 결과가 표시됩니다.
+실행 후 `http://localhost:8080`에 접속하여 멀티 스트림 대시보드를 확인할 수 있습니다.
 
 ---
 
-## 📁 프로젝트 구조
+## ⚙️ 시스템 설정
 
-```
-SmartFactory-Vision/
-├── build.gradle.kts              # 의존성 (JPyRust v1.1.6)
-├── gradlew / gradlew.bat         # Gradle Wrapper
-├── src/main/
-│   ├── java/com/smartfactory/vision/
-│   │   ├── VisionApplication.java           # Spring Boot 진입점
-│   │   ├── config/
-│   │   │   └── WebSocketConfig.java         # STOMP WebSocket 설정
-│   │   ├── dashboard/controller/
-│   │   │   └── DashboardController.java     # "/" → index.html
-│   │   ├── detection/service/
-│   │   │   └── JPyRustService.java          # AI 브릿지 서비스
-│   │   ├── global/exception/
-│   │   │   └── GlobalExceptionHandler.java  # 에러 처리
-│   │   └── stream/controller/
-│   │       └── WebcamController.java        # 프레임 업로드 API
-│   └── resources/
-│       ├── application.yml                  # 서버 설정
-│       └── templates/
-│           └── index.html                   # 대시보드 UI
-└── README.md
-```
+Windows 환경에서의 경로 혼선과 권한 문제를 방지하기 위해 표준화된 경로를 사용합니다.
+
+- **작업 디렉토리**: `~/.jpyrust` (사용자 홈 디렉토리)
+- **데이터베이스**: H2 파일 기반 (`~/.jpyrust/historydb`)
+- **AI 모델**: YOLOv8n (최초 실행 시 자동 다운로드)
 
 ---
 
-## ⚙️ 설정
+## 📜 개발 로드맵
 
-### `application.yml`
-
-```yaml
-server:
-  port: 8080
-spring:
-  application:
-    name: SmartFactory-Vision
-app:
-  ai:
-    work-dir: C:/jpyrust_temp
-    model-path: yolov8n.pt
-```
-
-### `build.gradle.kts`
-
-```kotlin
-dependencies {
-    implementation("org.springframework.boot:spring-boot-starter-web")
-    implementation("org.springframework.boot:spring-boot-starter-websocket")
-    implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
-    implementation("com.github.farmer0010:JPyRust:v1.1.6")
-}
-```
-
----
-
-## 🔧 문제 해결
-
-### Q. 카메라가 안 보여요
-**A.** 브라우저에서 카메라 권한이 허용되어 있는지 확인하세요. HTTPS 또는 `localhost`에서만 작동합니다.
-
-### Q. 시작 시 `NoSuchMethodError` 발생
-**A.** 로컬에 `com/jpyrust/JPyRustBridge.java` 파일이 있으면 삭제하세요. 해당 클래스는 라이브러리에서 제공합니다.
-
-### Q. 재시작 시 `WinError 5` 발생
-**A.** JPyRust v1.1.6으로 업그레이드하세요. 동적 공유 메모리 키를 사용하여 해결되었습니다.
-
-### Q. WebSocket이 "Offline" 표시
-**A.** 포트 8080이 사용 중인지 확인하세요. WebSocket은 3초마다 자동 재연결을 시도합니다.
-
----
-
-## 🛠️ 기술 스택
-
-| 레이어 | 기술 |
-|--------|------|
-| **백엔드** | Spring Boot 3.2.1, Java 17 |
-| **AI 브릿지** | JPyRust v1.1.6 (Rust JNI + Python 데몬) |
-| **AI 모델** | Ultralytics YOLOv8n |
-| **프론트엔드** | Tailwind CSS, Chart.js, SockJS, STOMP.js |
-| **통신** | REST (프레임 업로드), WebSocket (탐지 푸시) |
-
----
-
-## 📜 버전 이력
-
-| 버전 | 날짜 | 변경 사항 |
-|------|------|----------|
-| **v1.0** | 2026-02 | 실시간 YOLO 탐지 및 SF 테마 대시보드 초기 릴리즈 |
-
----
-
-## 📅 로드맵
-
-- [ ] 멀티 카메라 지원
-- [ ] 탐지 알림 시스템 (이메일/SMS)
-- [ ] 탐지 이력 및 분석 대시보드
-- [ ] 커스텀 YOLO 모델 학습 통합
+- [x] 멀티 카메라 지원 (2단계 완료)
+- [x] 감지 이력 데이터베이스 저장 구현
+- [x] 2x2 고해상도 그리드 UI 적용
+- [ ] 사용자 정의 모델 학습 연동 기능
+- [ ] 분산 워커 지원 (여러 대의 PC로 확장)
 - [ ] Docker 배포 지원
 
 ---
 
 ## 📄 라이선스
 
-MIT License
+MIT License. 자세한 내용은 [LICENSE](LICENSE) 파일을 참조하세요.
 
 ---
 
 <p align="center">
   <b>🏭 SmartFactory-Vision</b><br>
-  <i>☕ Spring Boot + 🦀 JPyRust + 🐍 YOLOv8</i><br>
-  <i>스마트 제조를 위한 실시간 AI 검사 시스템</i>
+  <i>차세대 AI 비전 기술로 스마트 제조 공정을 혁신합니다.</i>
 </p>

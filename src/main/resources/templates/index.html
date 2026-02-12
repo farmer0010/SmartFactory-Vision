@@ -4,18 +4,13 @@
 <head>
     <meta charset="UTF-8">
     <title>SmartFactory Vision Control</title>
-
-    <!-- Libraries -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-    <!-- Custom Styles for Sci-Fi Theme -->
     <style>
         body {
             font-family: 'Courier New', Courier, monospace;
-            /* Tech mono font */
         }
 
         .neon-border {
@@ -55,7 +50,6 @@
             }
         }
 
-        /* Scrollbar */
         ::-webkit-scrollbar {
             width: 8px;
         }
@@ -76,8 +70,6 @@
 </head>
 
 <body class="bg-slate-900 text-cyan-400 h-screen overflow-hidden flex flex-col">
-
-    <!-- Header -->
     <header class="flex justify-between items-center p-4 border-b border-cyan-800 bg-slate-950 shadow-lg z-50">
         <div class="flex items-center space-x-3">
             <svg class="w-8 h-8 text-cyan-400 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -89,8 +81,15 @@
             </svg>
             <h1
                 class="text-2xl font-bold tracking-widest uppercase text-cyan-300 drop-shadow-[0_0_5px_rgba(34,211,238,0.8)]">
-                SmartFactory<span class="text-white">Vision</span></h1>
+                SmartFactory<span class="text-white">Vision</span>
+            </h1>
         </div>
+        <nav class="flex space-x-4">
+            <a href="/"
+                class="px-3 py-1 bg-cyan-900/30 text-cyan-300 rounded border border-cyan-500/50 shadow-[0_0_10px_rgba(34,211,238,0.2)] text-xs font-bold uppercase tracking-wider">Dashboard</a>
+            <a href="/history"
+                class="px-3 py-1 bg-slate-800 hover:bg-cyan-900/50 text-slate-400 hover:text-cyan-300 rounded border border-transparent hover:border-cyan-500/50 transition-all text-xs font-bold uppercase tracking-wider">Analysis</a>
+        </nav>
         <div class="flex items-center space-x-4">
             <div id="connectionStatus"
                 class="flex items-center space-x-2 border border-slate-700 px-3 py-1 rounded-full bg-slate-900">
@@ -100,30 +99,51 @@
             <div class="text-[10px] text-slate-500 tracking-widest">SYS.VER.1.0</div>
         </div>
     </header>
-
-    <!-- Main Content -->
     <main class="flex-1 grid grid-cols-12 gap-4 p-4 min-h-0">
-
-        <!-- Left Panel: Video Stream -->
-        <div
-            class="col-span-8 bg-slate-800 rounded-lg border border-cyan-900 overflow-hidden relative shadow-[0_0_20px_rgba(0,0,0,0.5)] flex flex-col">
+        <div class="col-span-8 grid grid-cols-2 grid-rows-2 gap-4 h-full min-h-0">
             <div
-                class="absolute top-4 left-4 z-20 bg-black/70 px-2 py-1 rounded text-[10px] border border-cyan-500/30 text-cyan-200 tracking-wider">
-                CAM-01 LIVE FEED</div>
-            <div class="scan-line"></div>
-
-            <!-- Video & Canvas Wrapper -->
-            <div class="relative flex-1 bg-black flex items-center justify-center">
-                <video id="webcamVideo" autoplay playsinline muted
-                    class="absolute w-full h-full object-cover opacity-90"></video>
-                <canvas id="overlayCanvas" class="absolute w-full h-full z-10 pointer-events-none"></canvas>
+                class="relative bg-slate-800 rounded-lg border border-cyan-900 overflow-hidden shadow-[0_0_20px_rgba(0,0,0,0.5)] group">
+                <div
+                    class="absolute top-2 left-2 z-20 bg-black/70 px-2 py-0.5 rounded text-[10px] border border-cyan-500/30 text-cyan-200 tracking-wider">
+                    CAM-01</div>
+                <div class="scan-line opacity-50"></div>
+                <div class="relative w-full h-full bg-black flex items-center justify-center">
+                    <canvas id="overlayCanvas-cam1" class="absolute w-full h-full z-10 pointer-events-none"></canvas>
+                </div>
             </div>
+            <div
+                class="relative bg-slate-800 rounded-lg border border-cyan-900 overflow-hidden shadow-[0_0_20px_rgba(0,0,0,0.5)] group">
+                <div
+                    class="absolute top-2 left-2 z-20 bg-black/70 px-2 py-0.5 rounded text-[10px] border border-cyan-500/30 text-cyan-200 tracking-wider">
+                    CAM-02</div>
+                <div class="scan-line opacity-30"></div>
+                <div class="relative w-full h-full bg-black flex items-center justify-center">
+                    <canvas id="overlayCanvas-cam2" class="absolute w-full h-full z-10 pointer-events-none"></canvas>
+                </div>
+            </div>
+            <div
+                class="relative bg-slate-800 rounded-lg border border-cyan-900 overflow-hidden shadow-[0_0_20px_rgba(0,0,0,0.5)] group">
+                <div
+                    class="absolute top-2 left-2 z-20 bg-black/70 px-2 py-0.5 rounded text-[10px] border border-cyan-500/30 text-cyan-200 tracking-wider">
+                    CAM-03</div>
+                <div class="scan-line opacity-30"></div>
+                <div class="relative w-full h-full bg-black flex items-center justify-center">
+                    <canvas id="overlayCanvas-cam3" class="absolute w-full h-full z-10 pointer-events-none"></canvas>
+                </div>
+            </div>
+            <div
+                class="relative bg-slate-800 rounded-lg border border-cyan-900 overflow-hidden shadow-[0_0_20px_rgba(0,0,0,0.5)] group">
+                <div
+                    class="absolute top-2 left-2 z-20 bg-black/70 px-2 py-0.5 rounded text-[10px] border border-cyan-500/30 text-cyan-200 tracking-wider">
+                    CAM-04</div>
+                <div class="scan-line opacity-30"></div>
+                <div class="relative w-full h-full bg-black flex items-center justify-center">
+                    <canvas id="overlayCanvas-cam4" class="absolute w-full h-full z-10 pointer-events-none"></canvas>
+                </div>
+            </div>
+            <video id="webcamVideo" autoplay playsinline muted class="hidden"></video>
         </div>
-
-        <!-- Right Panel: Stats & Logs -->
         <div class="col-span-4 flex flex-col space-y-4 min-h-0">
-
-            <!-- FPS Chart -->
             <div class="bg-slate-800 p-4 rounded-lg border border-cyan-900/50 shadow-lg h-48 flex flex-col">
                 <div class="flex justify-between items-center mb-2 border-b border-cyan-900/30 pb-1">
                     <h3 class="text-xs font-bold uppercase text-slate-300">System Load / FPS</h3>
@@ -133,8 +153,6 @@
                     <canvas id="fpsChart"></canvas>
                 </div>
             </div>
-
-            <!-- Current Detection Confidence -->
             <div
                 class="bg-slate-800 p-4 rounded-lg border border-cyan-900/50 shadow-lg h-24 flex items-center justify-between relative overflow-hidden">
                 <div class="z-10 relative">
@@ -145,7 +163,6 @@
                         <span class="text-sm ml-1 text-cyan-400">%</span>
                     </div>
                 </div>
-                <!-- Progress Circular or Bar -->
                 <div class="w-1/2 flex flex-col space-y-1 z-10">
                     <div class="w-full bg-slate-700 h-1.5 rounded-full overflow-hidden">
                         <div id="confidenceBar"
@@ -154,11 +171,8 @@
                     </div>
                     <div class="text-[10px] text-right text-slate-500">AI PROBABILITY</div>
                 </div>
-                <!-- Background decorative element -->
                 <div class="absolute right-0 top-0 w-24 h-24 bg-cyan-500/5 rounded-full blur-2xl -mr-4 -mt-4"></div>
             </div>
-
-            <!-- Detection Log -->
             <div
                 class="bg-slate-800 p-4 rounded-lg border border-cyan-900/50 shadow-lg flex-1 overflow-hidden flex flex-col relative">
                 <div
@@ -175,34 +189,33 @@
             </div>
         </div>
     </main>
-
-    <!-- Scripts -->
     <script>
         const video = document.getElementById('webcamVideo');
-        const canvas = document.getElementById('overlayCanvas');
-        const ctx = canvas.getContext('2d');
-
+        const cameras = ['cam1', 'cam2', 'cam3', 'cam4'];
+        const canvasMap = {};
+        const ctxMap = {};
+        cameras.forEach(camId => {
+            const c = document.getElementById(`overlayCanvas-${camId}`);
+            if (c) {
+                canvasMap[camId] = c;
+                ctxMap[camId] = c.getContext('2d');
+            }
+        });
         const logContainer = document.getElementById('logContainer');
         const logCountEl = document.getElementById('logCount');
         const connectionStatus = document.getElementById('connectionStatus');
         const confidenceValue = document.getElementById('confidenceValue');
         const confidenceBar = document.getElementById('confidenceBar');
         const currentFpsEl = document.getElementById('currentFps');
-
         let stompClient = null;
         let lastFrameTime = Date.now();
         let frameCount = 0;
         let totalLogs = 0;
-
-        // FPS Chart Setup
         const fpsData = new Array(30).fill(0);
         const chartCtx = document.getElementById('fpsChart').getContext('2d');
-
-        // Custom Gradient for Chart
         const gradient = chartCtx.createLinearGradient(0, 0, 0, 200);
         gradient.addColorStop(0, 'rgba(34, 211, 238, 0.4)');
         gradient.addColorStop(1, 'rgba(34, 211, 238, 0)');
-
         const fpsChart = new Chart(chartCtx, {
             type: 'line',
             data: {
@@ -222,7 +235,7 @@
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                animation: false, // Performance optimization
+                animation: false,
                 scales: {
                     y: {
                         beginAtZero: true,
@@ -235,66 +248,55 @@
                 plugins: { legend: { display: false }, tooltip: { enabled: false } }
             }
         });
-
-        // 1. Webcam Initialization
         async function startWebcam() {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({
                     video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: "environment" }
                 });
                 video.srcObject = stream;
-
-                // Wait for metadata to set canvas size
                 video.onloadedmetadata = () => {
-                    canvas.width = video.videoWidth;
-                    canvas.height = video.videoHeight;
+                    cameras.forEach(camId => {
+                        const c = canvasMap[camId];
+                        if (c) {
+                            c.width = video.videoWidth;
+                            c.height = video.videoHeight;
+                        }
+                    });
                     addLog("System", `Webcam Initialized: ${video.videoWidth}x${video.videoHeight}`, "success");
-                    startStreaming(); // Start streaming only after video is ready
+                    startStreaming();
                 };
             } catch (err) {
-                console.error("Webcam Error:", err);
                 addLog("System", "Webcam Access Denied: " + err.message, "error");
             }
         }
-
-        // 2. WebSocket Connection
         function connectWebSocket() {
             const socket = new SockJS('/ws-stomp');
             stompClient = Stomp.over(socket);
-            stompClient.debug = null; // Disable debug logs
-
+            stompClient.debug = null;
             stompClient.connect({}, function (frame) {
                 updateStatus(true);
                 addLog("System", "Connected to Mainframe Network", "success");
-
-                stompClient.subscribe('/topic/detections', function (message) {
-                    try {
-                        const body = JSON.parse(message.body);
-                        handleDetection(body);
-                    } catch (e) {
-                        console.error("JSON Parse Error", e);
-                    }
+                cameras.forEach(camId => {
+                    stompClient.subscribe(`/topic/detections/${camId}`, function (message) {
+                        try {
+                            const body = JSON.parse(message.body);
+                            handleDetection(camId, body);
+                        } catch (e) { }
+                    });
                 });
             }, function (err) {
                 updateStatus(false);
                 addLog("System", "WebSocket Disconnected. Retrying...", "error");
-                setTimeout(connectWebSocket, 3000); // Reconnect
+                setTimeout(connectWebSocket, 3000);
             });
         }
-
-        // 3. Frame Sender (~30 FPS)
         function startStreaming() {
             const offscreenCanvas = document.createElement('canvas');
             const offscreenCtx = offscreenCanvas.getContext('2d');
-
-            // Using requestAnimationFrame for smoother UI, but throttle sending
             let lastSendTime = 0;
-            const sendInterval = 40; // ~25 FPS target for upload
-
+            const sendInterval = 40;
             function loop(timestamp) {
                 if (video.readyState === video.HAVE_ENOUGH_DATA) {
-
-                    // FPS Calculation
                     frameCount++;
                     if (timestamp - lastFrameTime >= 1000) {
                         const fps = frameCount;
@@ -303,123 +305,74 @@
                         frameCount = 0;
                         lastFrameTime = timestamp;
                     }
-
-                    // Send Frame to Server
+                    cameras.forEach(camId => {
+                        const ctx = ctxMap[camId];
+                        const cvs = canvasMap[camId];
+                        if (ctx && cvs) {
+                            ctx.drawImage(video, 0, 0, cvs.width, cvs.height);
+                            const dets = window.latestDetections ? window.latestDetections[camId] : null;
+                            if (dets) {
+                                dets.forEach(det => drawBox(ctx, det));
+                            }
+                        }
+                    });
                     if (timestamp - lastSendTime > sendInterval) {
                         offscreenCanvas.width = video.videoWidth;
                         offscreenCanvas.height = video.videoHeight;
                         offscreenCtx.drawImage(video, 0, 0);
-
                         offscreenCanvas.toBlob((blob) => {
                             if (blob) {
-                                const formData = new FormData();
-                                formData.append("image", blob, "frame.jpg");
-
-                                // Fire-and-forget upload
-                                fetch('/api/stream/frame', {
-                                    method: 'POST',
-                                    body: formData,
-                                    // keepalive: true // optional
-                                }).then(response => {
-                                    if (!response.ok) addLog("Network", "Server Error: " + response.status, "error");
-                                }).catch((err) => {
-                                    addLog("Network", "Upload Fail: " + err.message, "error");
-                                    console.error(err);
+                                cameras.forEach(camId => {
+                                    const formData = new FormData();
+                                    formData.append("image", blob, "frame.jpg");
+                                    formData.append("camId", camId);
+                                    fetch('/api/stream/frame', {
+                                        method: 'POST',
+                                        body: formData,
+                                    }).catch(() => { });
                                 });
-
                                 lastSendTime = timestamp;
                             }
-                        }, 'image/jpeg', 0.6); // Quality 0.6 for speed
+                        }, 'image/jpeg', 0.6);
                     }
                 }
                 requestAnimationFrame(loop);
             }
             requestAnimationFrame(loop);
         }
-
-        // 4. Detection Logic
-        function handleDetection(data) {
-            // Clear previous drawings
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            // Robust parsing: handle raw list or object with 'detections' key
+        function drawBox(ctx, det) {
+            const x = det.x || 0;
+            const y = det.y || 0;
+            const w = det.w || 0;
+            const h = det.h || 0;
+            const label = det.label || "unknown";
+            const score = det.score || det.confidence || 0;
+            ctx.strokeStyle = label.toLowerCase().includes('defect') ? '#ff0000' : '#22d3ee';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(x, y, w, h);
+            ctx.fillStyle = ctx.strokeStyle;
+            ctx.font = '12px monospace';
+            ctx.fillText(`${label} ${Math.round(score * 100)}%`, x, y > 15 ? y - 5 : y + 15);
+        }
+        function handleDetection(camId, data) {
+            if (!window.latestDetections) window.latestDetections = {};
             let detections = [];
             if (Array.isArray(data)) detections = data;
             else if (data && data.detections) detections = data.detections;
-
-            // If data is just a rough JSON string from Python that hasn't been parsed yet?
-            // The JPyRustService code I wrote returns a String. 
-            // In WebcamController, we pass that String to WebSocket.
-            // So message.body is that String. Check if it needs double parsing?
-            // Usually message.body IS the string. JSON.parse(message.body) should be the Object.
-            // If Python returned a string representation of a list, it acts as JSON.
-            // WE ASSUME Python returns valid JSON string.
-
+            window.latestDetections[camId] = detections;
             let maxConf = 0;
-
-            if (detections.length > 0) {
-                detections.forEach(det => {
-                    // Expecting [x, y, w, h] or similar. Adapt if needed.
-                    // If Python returns [x1, y1, x2, y2], we need to calc w/h.
-                    // For now, let's assume JPyRust returns [x, y, w, h] as standard.
-                    // If not, we might see odd boxes.
-                    let x, y, w, h;
-                    if (Array.isArray(det.bbox)) {
-                        [x, y, w, h] = det.bbox;
-                    }
-
-                    const label = det.label || "Object";
-                    const score = det.score || det.confidence || 0;
-
-                    // Style Choice
-                    const isDefect = label.toLowerCase().includes('defect') || label.toLowerCase().includes('bad');
-
-                    ctx.save();
-                    if (isDefect) {
-                        ctx.strokeStyle = '#ef4444'; // Red
-                        ctx.shadowColor = '#ef4444';
-                    } else {
-                        ctx.strokeStyle = '#22d3ee'; // Cyan
-                        ctx.shadowColor = '#22d3ee';
-                    }
-
-                    ctx.lineWidth = 2;
-                    ctx.shadowBlur = 10;
-                    ctx.strokeRect(x, y, w, h);
-
-                    // Label Background
-                    ctx.fillStyle = isDefect ? 'rgba(239, 68, 68, 0.8)' : 'rgba(34, 211, 238, 0.8)';
-                    const text = `${label} ${(score * 100).toFixed(0)}%`;
-                    const textWidth = ctx.measureText(text).width;
-                    ctx.fillRect(x, y - 20, textWidth + 10, 20);
-
-                    // Label Text
-                    ctx.fillStyle = '#000';
-                    ctx.font = 'bold 12px Courier New';
-                    ctx.fillText(text, x + 5, y - 5);
-                    ctx.restore();
-
-                    // Log critical detections
-                    if (isDefect) {
-                        addLog("AI-CORE", `ALERT: ${label} detected (${(score * 100).toFixed(0)}%)`, "error");
-                    }
-
-                    if (score > maxConf) maxConf = score;
-                });
-            }
-
-            // Update Confidence Gauge
+            detections.forEach(det => {
+                const score = det.score || det.confidence || 0;
+                if (score > maxConf) maxConf = score;
+                const label = det.label || "";
+                if (label.toLowerCase().includes('defect')) {
+                    addLog(camId, `ALERT: ${label}`, "error");
+                }
+            });
             const confPct = Math.round(maxConf * 100);
-            // Animate values
             animateValue(confidenceValue, parseInt(confidenceValue.innerText), confPct, 200);
             confidenceBar.style.width = `${confPct}%`;
-
-            // Color shift based on confidence match
-            if (confPct > 80) confidenceBar.className = "bg-gradient-to-r from-cyan-400 to-green-400 h-full rounded-full transition-all duration-300";
-            else confidenceBar.className = "bg-gradient-to-r from-cyan-500 to-blue-500 h-full rounded-full transition-all duration-300";
         }
-
-        // Helper: Status UI
         function updateStatus(isOnline) {
             const dot = connectionStatus.children[0];
             const text = connectionStatus.children[1];
@@ -435,23 +388,17 @@
                 connectionStatus.className = "flex items-center space-x-2 border border-red-900/50 px-3 py-1 rounded-full bg-red-950/30";
             }
         }
-
-        // Helper: Chart Update
         function updateChart(val) {
             fpsData.shift();
             fpsData.push(val);
             fpsChart.update('active');
         }
-
-        // Helper: Logging
         function addLog(source, msg, type = 'info') {
             const time = new Date().toLocaleTimeString('en-US', { hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" });
             const div = document.createElement('div');
             div.className = "flex space-x-2 border-l-2 border-transparent hover:bg-white/5 p-0.5 rounded transition-colors";
-
             let color = 'text-cyan-300';
             let border = 'border-slate-800';
-
             if (type === 'error') {
                 color = 'text-red-400 font-bold';
                 border = 'border-red-500';
@@ -459,24 +406,18 @@
                 color = 'text-green-400';
                 border = 'border-green-500';
             }
-
             div.classList.replace('border-transparent', border);
-
             div.innerHTML = `
                 <span class="text-slate-600 text-[10px] w-14 shrinking-0">[${time}]</span> 
                 <span class="text-slate-400 font-bold w-16 shrinking-0 text-[10px]">${source}:</span> 
                 <span class="${color} flex-1 truncate">${msg}</span>`;
-
             logContainer.prepend(div);
             totalLogs++;
             logCountEl.innerText = totalLogs;
-
-            // Limit DOM elements
             if (logContainer.children.length > 50) {
                 logContainer.removeChild(logContainer.lastChild);
             }
         }
-
         function animateValue(obj, start, end, duration) {
             let startTimestamp = null;
             const step = (timestamp) => {
@@ -489,14 +430,11 @@
             };
             window.requestAnimationFrame(step);
         }
-
-        // Boot
         window.addEventListener('load', () => {
             connectWebSocket();
-            startWebcam(); // Camera init triggers stream start
+            startWebcam();
             addLog("System", "Interface Loaded. Standing by...", "info");
         });
-
     </script>
 </body>
 

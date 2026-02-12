@@ -22,14 +22,15 @@ public class WebcamController {
     private final SimpMessagingTemplate messagingTemplate;
 
     @PostMapping("/frame")
-    public void receiveFrame(@RequestParam("image") MultipartFile file) throws IOException {
+    public void receiveFrame(
+            @RequestParam("image") MultipartFile file,
+            @RequestParam(value = "camId", defaultValue = "cam1") String camId) throws IOException {
         byte[] bytes = file.getBytes();
-        log.info("[Frame] Received {} bytes", bytes.length);
+        log.info("[WebcamController] Received frame for {} ({} bytes)", camId, bytes.length);
 
-        jPyRustService.detectAsync(bytes).thenAccept(result -> {
-            log.info("[Frame] Result ({}chars): {}", result.length(),
-                    result.substring(0, Math.min(200, result.length())));
-            messagingTemplate.convertAndSend("/topic/detections", result);
+        jPyRustService.detectAsync(camId, bytes).thenAccept(result -> {
+            log.info("[WebcamController] Detection result for {}: {}", camId, result.substring(0, Math.min(100, result.length())));
+            messagingTemplate.convertAndSend("/topic/detections/" + camId, result);
         });
     }
 }

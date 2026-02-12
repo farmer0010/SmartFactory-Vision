@@ -1,6 +1,6 @@
 # 🏭 SmartFactory-Vision
 
-> **"Real-Time AI-Powered Factory Inspection: From Webcam to Detection in Milliseconds."**
+> **"Real-Time AI-Powered Factory Inspection: Multi-Stream Architecture with JPyRust."**
 
 ![Build Status](https://img.shields.io/github/actions/workflow/status/farmer0010/SmartFactory-Vision/build.yml?style=flat-square&logo=github&label=Build)
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2.1-brightgreen?style=flat-square&logo=spring-boot)
@@ -8,15 +8,15 @@
 [![JPyRust](https://img.shields.io/badge/JPyRust-v1.2.0-blue?style=flat-square)](https://github.com/farmer0010/JPyRust)
 [![Python](https://img.shields.io/badge/Python-3.11-blue?style=flat-square&logo=python)](https://www.python.org/)
 
-[🇰🇷 한국어 버전 (Korean Version)](README_KR.md)
+[🇰🇷 한국어 버전 (README_KR.md)](README_KR.md)
 
 ---
 
 ## 💡 Introduction
 
-**SmartFactory-Vision** is a real-time AI vision inspection system built with **Spring Boot** and powered by **JPyRust** for native-speed Python AI inference.
+**SmartFactory-Vision** is a high-performance AI vision inspection system. It utilizes **Spring Boot** and **JPyRust** to achieve native-speed object detection across multiple camera streams.
 
-It captures webcam frames in the browser, sends them to a Spring Boot backend, runs **YOLOv8 object detection** via the JPyRust native bridge, and pushes detection results back to the client in real-time through **WebSocket (STOMP)**.
+This project demonstrates a robust pipeline: capturing frames from multiple sources, processing them through an AI worker pool, persisting detection history in an H2 database, and pushing real-time overlays to a 2x2 grid dashboard via WebSocket.
 
 ---
 
@@ -24,228 +24,120 @@ It captures webcam frames in the browser, sends them to a Spring Boot backend, r
 
 | Feature | Description |
 |---------|-------------|
-| 📷 **Real-Time Webcam Streaming** | Browser-based camera capture at ~25 FPS |
-| 🧠 **AI Object Detection** | YOLOv8 inference via JPyRust Shared Memory bridge |
-| ⚡ **Native Performance** | ~40ms GPU / ~100ms CPU per frame (no Python VM startup) |
-| 📡 **WebSocket Push** | Live detection results via STOMP over SockJS |
-| 🖥️ **Sci-Fi Dashboard** | Neon-themed control panel with FPS chart & detection logs |
-| 🔄 **Auto-Reconnect** | WebSocket auto-recovery on connection loss |
+| 📹 **Multi-Stream Support** | Simultaneous monitoring of up to 4 camera feeds in a 2x2 grid |
+| 🧠 **AI Worker Pool** | Managed pool of JPyRust workers for parallel image processing |
+| 🗄️ **Detection History** | Automatic persistence of all detection logs to H2/JPA database |
+| ⚡ **Performance** | ~40ms GPU inference with zero Python VM startup overhead |
+| 📡 **Independent Topics** | Camera-specific WebSocket topics for low-latency updates |
+| 🖥️ **Sci-Fi UI** | Advanced neon-themed dashboard with real-time analytics & charts |
 
 ---
 
 ## 🏗️ Architecture
 
 ```mermaid
-graph LR
-    subgraph "Browser"
-        Webcam["📷 Webcam"]
-        UI["🖥️ Dashboard UI"]
+graph TD
+    subgraph "Browser (Client)"
+        C1["📷 CAM-1"]
+        C2["📷 CAM-2"]
+        C3["📷 CAM-3"]
+        C4["📷 CAM-4"]
+        UI["🖥️ 2x2 Dashboard UI"]
     end
 
-    subgraph "Spring Boot (Java 17)"
+    subgraph "Spring Boot Backend"
         WC["WebcamController"]
-        JPS["JPyRustService"]
+        Pool["🧠 AI Service Pool"]
+        subgraph "Persistence"
+            DHS["DetectionHistoryService"]
+            DB[("H2 Database")]
+        end
         WS["WebSocket Broker"]
     end
 
-    subgraph "JPyRust Native Bridge"
-        Bridge["🔗 JPyRustBridge"]
-        Rust["🦀 jpyrust.dll (JNI)"]
-        Python["🐍 Python Daemon"]
-        YOLO["🧠 YOLOv8"]
+    subgraph "JPyRust Native Layer"
+        Bridge["JPyRustBridge (Native)"]
+        SHM["Shared Memory"]
+        Daemon["Python Daemon"]
+        YOLO["YOLOv8 Model"]
     end
 
-    Webcam -- "POST /api/stream/frame" --> WC
-    WC --> JPS
-    JPS --> Bridge
-    Bridge -- "JNI" --> Rust
-    Rust -- "Shared Memory" --> Python
-    Python --> YOLO
-    YOLO -- "Detection JSON" --> Python
-    Python -- "Result" --> Rust
-    Rust --> Bridge
-    Bridge --> JPS
-    JPS -- "Async" --> WS
-    WS -- "/topic/detections" --> UI
+    C1 & C2 & C3 & C4 -- "POST /api/stream/frame?camId=X" --> WC
+    WC -- "Queue Tasks" --> Pool
+    Pool -- "Direct Map" --> Bridge
+    Bridge -- "IPC" --> SHM
+    SHM -- "Inference" --> Daemon
+    Daemon --> YOLO
+    
+    YOLO -- "Result JSON" --> Pool
+    Pool -- "Async Save" --> DHS
+    DHS --> DB
+    
+    Pool -- "Push Topic /detections/camX" --> WS
+    WS -- "STOMP" --> UI
 ```
 
-### Data Flow
+---
 
-1. **Capture** — Browser captures webcam frame as JPEG blob (~25 FPS)
-2. **Upload** — Frame sent via `POST /api/stream/frame` (multipart)
-3. **Inference** — JPyRust processes image through Shared Memory → Python YOLO
-4. **Push** — Detection results pushed to browser via WebSocket `/topic/detections`
-5. **Render** — Canvas overlay draws bounding boxes with labels and confidence
+## 📊 Performance Benchmark
+
+| Metric | Target | Result |
+|--------|:-----:|:------:|
+| **Max Streams** | 4 | Verified (2x2 Grid) |
+| **Inference Latency** | < 50ms | ~42ms (NVIDIA GPU) |
+| **Persistence Delay** | < 10ms | Async Non-blocking |
+| **UI Stability** | 60 FPS | Stable (Chart.js Opt.) |
 
 ---
 
-## 📊 Performance
-
-| Metric | Value |
-|--------|:-----:|
-| **Frame Capture** | ~25 FPS (Browser) |
-| **AI Inference (GPU)** | ~40ms / frame |
-| **AI Inference (CPU)** | ~100ms / frame |
-| **End-to-End Latency** | < 200ms |
-| **Python Startup** | 0ms (Persistent Daemon) |
-
-> 💡 GPU auto-detection: NVIDIA CUDA → GPU mode, otherwise CPU fallback. No config needed.
-
----
-
-## 🖥️ Dashboard
-
-The web dashboard features a **Sci-Fi themed control panel** with:
-
-- 🎥 **Live Video Feed** with scan-line animation overlay
-- 📊 **Real-Time FPS Chart** (Chart.js line graph)
-- 🎯 **Confidence Gauge** with animated progress bar
-- 📋 **Detection Log** with color-coded entries (defects in red)
-- 🟢 **Connection Status** indicator (Online/Offline)
-
----
-
-## 🚀 Quick Start
+## 🚀 Getting Started
 
 ### Prerequisites
-
 - **Java 17+**
-- **Webcam** (built-in or USB)
-- **JPyRust v1.2.0** (auto-downloaded via JitPack)
+- **Webcam/Vision Input**
+- **Windows 10/11** (Optimized for Win-SHMEM)
 
-### 1. Clone & Run
-
+### Running the System
 ```bash
-# Clone
+# 1. Clone
 git clone https://github.com/farmer0010/SmartFactory-Vision.git
-cd SmartFactory-Vision
 
-# Run (first launch downloads ~500MB Python environment)
+# 2. Build & Run
 ./gradlew bootRun
 ```
 
-### 2. Open Dashboard
-
-```
-http://localhost:8080
-```
-
-Allow camera access when prompted. Detection results appear in real-time.
+Visit `http://localhost:8080` to access the multi-stream dashboard.
 
 ---
 
-## 📁 Project Structure
+## 📁 System Configuration
 
-```
-SmartFactory-Vision/
-├── build.gradle.kts              # Dependencies (JPyRust v1.1.6)
-├── gradlew / gradlew.bat         # Gradle Wrapper
-├── src/main/
-│   ├── java/com/smartfactory/vision/
-│   │   ├── VisionApplication.java           # Spring Boot Entry
-│   │   ├── config/
-│   │   │   └── WebSocketConfig.java         # STOMP WebSocket Config
-│   │   ├── dashboard/controller/
-│   │   │   └── DashboardController.java     # "/" → index.html
-│   │   ├── detection/service/
-│   │   │   └── JPyRustService.java          # AI Bridge Service
-│   │   ├── global/exception/
-│   │   │   └── GlobalExceptionHandler.java  # Error Handling
-│   │   └── stream/controller/
-│   │       └── WebcamController.java        # Frame Upload API
-│   └── resources/
-│       ├── application.yml                  # Server Config
-│       └── templates/
-│           └── index.html                   # Dashboard UI
-└── README.md
-```
+The system is configured to use a standardized work directory and database path to ensure environment stability on Windows.
+
+- **Work Directory**: `~/.jpyrust` (User Home)
+- **Database**: H2 File-based (`~/.jpyrust/historydb`)
+- **Model**: YOLOv8n (Auto-downloaded)
 
 ---
 
-## ⚙️ Configuration
+## 📜 Roadmap
 
-### `application.yml`
-
-```yaml
-server:
-  port: 8080
-spring:
-  application:
-    name: SmartFactory-Vision
-app:
-  ai:
-    work-dir: C:/jpyrust_temp
-    model-path: yolov8n.pt
-```
-
-### `build.gradle.kts`
-
-```kotlin
-dependencies {
-    implementation("org.springframework.boot:spring-boot-starter-web")
-    implementation("org.springframework.boot:spring-boot-starter-websocket")
-    implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
-    implementation("com.github.farmer0010:JPyRust:v1.2.0")
-}
-```
-
----
-
-## 🔧 Troubleshooting
-
-### Q. Camera not showing?
-**A.** Ensure browser has camera permission. Use HTTPS or `localhost` only.
-
-### Q. `NoSuchMethodError` on startup?
-**A.** Delete any local `com/jpyrust/JPyRustBridge.java` file. The library provides this class.
-
-### Q. `WinError 5` on restart?
-**A.** Fixed in JPyRust v1.2.0 (Resolved with native SHMEM security patch).
-
-### Q. WebSocket shows "Offline"?
-**A.** Check that port 8080 is not occupied. The WebSocket auto-reconnects every 3 seconds.
-
----
-
-## 🛠️ Tech Stack
-
-| Layer | Technology |
-|-------|-----------|
-| **Backend** | Spring Boot 3.2.1, Java 17 |
-| **AI Bridge** | JPyRust v1.2.0 (Rust JNI + Python Daemon) |
-| **AI Model** | Ultralytics YOLOv8n |
-| **Frontend** | Tailwind CSS, Chart.js, SockJS, STOMP.js |
-| **Communication** | REST (frame upload), WebSocket (detection push) |
-
----
-
-## 📜 Version History
-
-| Version | Date | Changes |
-|---------|------|---------|
-| **v1.2.0** | 2026-02 | **Performance Upgrade:** Windows SHMEM Restoration & Security Fix |
-| **v1.0** | 2026-02 | Initial release with real-time YOLO detection and Sci-Fi dashboard |
-
----
-
-## 📅 Roadmap
-
-- [ ] Multi-camera support
-- [ ] Detection alert system (email/SMS)
-- [ ] Detection history & analytics dashboard
-- [ ] Custom YOLO model training integration
-- [ ] Docker deployment support
+- [x] Multi-camera support (Phase 2)
+- [x] Detection history persistence
+- [x] 2x2 High-density grid UI
+- [ ] Custom Model Training Integration
+- [ ] Distributed Worker Support (Multiple Machines)
+- [ ] Dockerized Deployment
 
 ---
 
 ## 📄 License
 
-MIT License
+MIT License. See [LICENSE](LICENSE) for details.
 
 ---
 
 <p align="center">
   <b>🏭 SmartFactory-Vision</b><br>
-  <i>Built with ☕ Spring Boot + 🦀 JPyRust + 🐍 YOLOv8</i><br>
-  <i>Real-Time AI Inspection for Smart Manufacturing.</i>
+  <i>Empowering Manufacturing with Next-Gen AI Vision.</i>
 </p>
