@@ -28,7 +28,7 @@ dependencies {
     compileOnly("org.projectlombok:lombok")
     annotationProcessor("org.projectlombok:lombok")
 
-    implementation("com.github.farmer0010:JPyRust:v1.1.6")
+    implementation("com.github.farmer0010:JPyRust:v1.2.0")
 }
 
 tasks.withType<Test> {

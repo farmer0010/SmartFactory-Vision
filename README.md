@@ -5,7 +5,7 @@
 ![Build Status](https://img.shields.io/github/actions/workflow/status/farmer0010/SmartFactory-Vision/build.yml?style=flat-square&logo=github&label=Build)
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2.1-brightgreen?style=flat-square&logo=spring-boot)
 [![Java](https://img.shields.io/badge/Java-17+-orange?style=flat-square&logo=openjdk)](https://openjdk.org/)
-[![JPyRust](https://img.shields.io/badge/JPyRust-v1.1.6-blue?style=flat-square)](https://github.com/farmer0010/JPyRust)
+[![JPyRust](https://img.shields.io/badge/JPyRust-v1.2.0-blue?style=flat-square)](https://github.com/farmer0010/JPyRust)
 [![Python](https://img.shields.io/badge/Python-3.11-blue?style=flat-square&logo=python)](https://www.python.org/)
 
 [🇰🇷 한국어 버전 (Korean Version)](README_KR.md)
@@ -111,7 +111,7 @@ The web dashboard features a **Sci-Fi themed control panel** with:
 
 - **Java 17+**
 - **Webcam** (built-in or USB)
-- **JPyRust v1.1.6** (auto-downloaded via JitPack)
+- **JPyRust v1.2.0** (auto-downloaded via JitPack)
 
 ### 1. Clone & Run
 
@@ -185,7 +185,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-websocket")
     implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
-    implementation("com.github.farmer0010:JPyRust:v1.1.6")
+    implementation("com.github.farmer0010:JPyRust:v1.2.0")
 }
 ```
 
@@ -200,7 +200,7 @@ dependencies {
 **A.** Delete any local `com/jpyrust/JPyRustBridge.java` file. The library provides this class.
 
 ### Q. `WinError 5` on restart?
-**A.** Upgrade to JPyRust v1.1.6 which uses dynamic Shared Memory keys.
+**A.** Fixed in JPyRust v1.2.0 (Resolved with native SHMEM security patch).
 
 ### Q. WebSocket shows "Offline"?
 **A.** Check that port 8080 is not occupied. The WebSocket auto-reconnects every 3 seconds.
@@ -212,7 +212,7 @@ dependencies {
 | Layer | Technology |
 |-------|-----------|
 | **Backend** | Spring Boot 3.2.1, Java 17 |
-| **AI Bridge** | JPyRust v1.1.6 (Rust JNI + Python Daemon) |
+| **AI Bridge** | JPyRust v1.2.0 (Rust JNI + Python Daemon) |
 | **AI Model** | Ultralytics YOLOv8n |
 | **Frontend** | Tailwind CSS, Chart.js, SockJS, STOMP.js |
 | **Communication** | REST (frame upload), WebSocket (detection push) |
@@ -223,6 +223,7 @@ dependencies {
 
 | Version | Date | Changes |
 |---------|------|---------|
+| **v1.2.0** | 2026-02 | **Performance Upgrade:** Windows SHMEM Restoration & Security Fix |
 | **v1.0** | 2026-02 | Initial release with real-time YOLO detection and Sci-Fi dashboard |
 
 ---

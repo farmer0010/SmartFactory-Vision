@@ -3,31 +3,29 @@ package com.smartfactory.vision.detection.service;
 import com.jpyrust.JPyRustBridge;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.io.File;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class JPyRustService {
 
     private final JPyRustBridge jPyRustBridge = new JPyRustBridge();
+    private final AtomicBoolean processing = new AtomicBoolean(false);
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
     @PostConstruct
     public void init() {
         try {
             String workDir = System.getProperty("user.home") + "/.jpyrust";
-            log.info("[JPyRustService] Initializing Native Bridge (v1.1.1)...");
-
+            log.info("[JPyRustService] Initializing Native Bridge (v1.2.0)...");
             jPyRustBridge.initialize(workDir, null);
-
+            log.info("[JPyRustService] Bridge initialized. Waiting for Python daemon...");
         } catch (Exception e) {
             log.error("[JPyRustService] Initialization failed", e);
         }
@@ -36,11 +34,17 @@ public class JPyRustService {
     @PreDestroy
     public void cleanup() {
         log.info("[JPyRustService] Stopping service...");
+        executor.shutdown();
     }
 
     public CompletableFuture<String> detectAsync(byte[] imageBytes) {
+        if (!processing.compareAndSet(false, true)) {
+            return CompletableFuture.completedFuture("{\"skipped\": true}");
+        }
+
         return CompletableFuture.supplyAsync(() -> {
             try {
+                log.info("[AI] Processing frame ({} bytes)...", imageBytes.length);
                 String workDir = System.getProperty("user.home") + "/.jpyrust";
 
                 ByteBuffer buffer = ByteBuffer.allocateDirect(imageBytes.length);
@@ -52,15 +56,21 @@ public class JPyRustService {
                         buffer,
                         imageBytes.length,
                         640, 480, 3);
+
                 if (resultBytes == null) {
+                    log.warn("[AI] Native bridge returned null");
                     return "{\"error\": \"Native bridge returned null\"}";
                 }
 
-                return new String(resultBytes, StandardCharsets.UTF_8);
+                String result = new String(resultBytes, StandardCharsets.UTF_8);
+                log.info("[AI] Result: {}", result.substring(0, Math.min(200, result.length())));
+                return result;
             } catch (Exception e) {
-                log.error("AI Inference Error", e);
+                log.error("[AI] Inference Error", e);
                 return "{\"error\": \"" + e.getMessage() + "\"}";
+            } finally {
+                processing.set(false);
             }
-        });
+        }, executor);
     }
 }
