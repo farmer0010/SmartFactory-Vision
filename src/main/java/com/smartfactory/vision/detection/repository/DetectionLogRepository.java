@@ -19,6 +19,6 @@ public interface DetectionLogRepository extends JpaRepository<DetectionLog, Long
     List<DetectionLog> findByIsDefectTrueOrderByTimestampDesc();
 
 
-    @Query(value = "SELECT FORMATDATETIME(timestamp, 'HH') as hour, COUNT(*) as count FROM detection_logs WHERE is_defect = true AND timestamp >= :since GROUP BY hour ORDER BY hour", nativeQuery = true)
+    @Query(value = "SELECT HOUR(timestamp) as hour, COUNT(*) as count FROM detection_logs WHERE is_defect = true AND timestamp >= :since GROUP BY HOUR(timestamp) ORDER BY hour", nativeQuery = true)
     List<Map<String, Object>> countDefectsPerHour(LocalDateTime since);
 }

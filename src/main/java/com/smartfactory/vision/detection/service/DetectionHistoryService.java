@@ -70,6 +70,11 @@ public class DetectionHistoryService {
     }
 
     public List<Map<String, Object>> getDefectStats() {
-        return detectionLogRepository.countDefectsPerHour(LocalDateTime.now().minusDays(1));
+        try {
+            return detectionLogRepository.countDefectsPerHour(LocalDateTime.now().minusDays(1));
+        } catch (Exception e) {
+            log.error("[History] Failed to fetch defect stats", e);
+            return List.of();
+        }
     }
 }
