@@ -28,7 +28,9 @@ dependencies {
     compileOnly("org.projectlombok:lombok")
     annotationProcessor("org.projectlombok:lombok")
 
-    implementation("com.github.farmer0010:JPyRust:v1.2.0")
+    implementation("com.github.farmer0010:JPyRust:v1.3.1")
+    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+    runtimeOnly("com.h2database:h2")
 }
 
 tasks.withType<Test> {

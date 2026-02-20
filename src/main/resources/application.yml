@@ -22,3 +22,11 @@ app:
   ai:
     work-dir: C:/Users/김주영/.jpyrust
     model-path: yolov8n.pt
+
+logging:
+  file:
+    name: d:/SmartFactory-Vision/shmem_test.log
+  level:
+    root: INFO
+    com.smartfactory: DEBUG
+    com.jpyrust: DEBUG

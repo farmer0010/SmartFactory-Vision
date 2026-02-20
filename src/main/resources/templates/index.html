@@ -108,6 +108,8 @@
                     CAM-01</div>
                 <div class="scan-line opacity-50"></div>
                 <div class="relative w-full h-full bg-black flex items-center justify-center">
+                    <span id="camStatus-cam1" class="text-cyan-700 text-xs animate-pulse z-5">Initializing
+                        Camera...</span>
                     <canvas id="overlayCanvas-cam1" class="absolute w-full h-full z-10 pointer-events-none"></canvas>
                 </div>
             </div>
@@ -118,6 +120,8 @@
                     CAM-02</div>
                 <div class="scan-line opacity-30"></div>
                 <div class="relative w-full h-full bg-black flex items-center justify-center">
+                    <span id="camStatus-cam2" class="text-cyan-700 text-xs animate-pulse z-5">Initializing
+                        Camera...</span>
                     <canvas id="overlayCanvas-cam2" class="absolute w-full h-full z-10 pointer-events-none"></canvas>
                 </div>
             </div>
@@ -128,6 +132,7 @@
                     CAM-03</div>
                 <div class="scan-line opacity-30"></div>
                 <div class="relative w-full h-full bg-black flex items-center justify-center">
+                    <span id="camStatus-cam3" class="text-cyan-700 text-xs animate-pulse z-5">Standby</span>
                     <canvas id="overlayCanvas-cam3" class="absolute w-full h-full z-10 pointer-events-none"></canvas>
                 </div>
             </div>
@@ -138,6 +143,7 @@
                     CAM-04</div>
                 <div class="scan-line opacity-30"></div>
                 <div class="relative w-full h-full bg-black flex items-center justify-center">
+                    <span id="camStatus-cam4" class="text-cyan-700 text-xs animate-pulse z-5">Standby</span>
                     <canvas id="overlayCanvas-cam4" class="absolute w-full h-full z-10 pointer-events-none"></canvas>
                 </div>
             </div>
@@ -250,10 +256,16 @@
         });
         async function startWebcam() {
             try {
+                addLog("System", "Requesting camera permission...", "info");
+                cameras.forEach(camId => {
+                    const s = document.getElementById(`camStatus-${camId}`);
+                    if (s) s.textContent = 'Requesting Camera Permission...';
+                });
                 const stream = await navigator.mediaDevices.getUserMedia({
-                    video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: "environment" }
+                    video: { width: { ideal: 640 }, height: { ideal: 480 } }
                 });
                 video.srcObject = stream;
+                await video.play();
                 video.onloadedmetadata = () => {
                     cameras.forEach(camId => {
                         const c = canvasMap[camId];
@@ -261,12 +273,21 @@
                             c.width = video.videoWidth;
                             c.height = video.videoHeight;
                         }
+                        const s = document.getElementById(`camStatus-${camId}`);
+                        if (s) s.style.display = 'none';
                     });
                     addLog("System", `Webcam Initialized: ${video.videoWidth}x${video.videoHeight}`, "success");
                     startStreaming();
                 };
+                if (video.readyState >= 2) {
+                    video.onloadedmetadata();
+                }
             } catch (err) {
                 addLog("System", "Webcam Access Denied: " + err.message, "error");
+                cameras.forEach(camId => {
+                    const s = document.getElementById(`camStatus-${camId}`);
+                    if (s) { s.textContent = 'Camera Unavailable'; s.classList.remove('animate-pulse'); s.classList.add('text-red-600'); }
+                });
             }
         }
         function connectWebSocket() {
@@ -341,18 +362,31 @@
             requestAnimationFrame(loop);
         }
         function drawBox(ctx, det) {
-            const x = det.x || 0;
-            const y = det.y || 0;
-            const w = det.w || 0;
-            const h = det.h || 0;
+            let x, y, w, h;
+            if (det.bbox && Array.isArray(det.bbox)) {
+                [x, y, w, h] = det.bbox;
+            } else {
+                x = det.x || 0;
+                y = det.y || 0;
+                w = det.w || 0;
+                h = det.h || 0;
+            }
             const label = det.label || "unknown";
             const score = det.score || det.confidence || 0;
-            ctx.strokeStyle = label.toLowerCase().includes('defect') ? '#ff0000' : '#22d3ee';
+            const isDefect = label.toLowerCase().includes('defect') || label.toLowerCase().includes('ng');
+            ctx.strokeStyle = isDefect ? '#ff0000' : '#22d3ee';
             ctx.lineWidth = 2;
+            ctx.shadowColor = ctx.strokeStyle;
+            ctx.shadowBlur = 6;
             ctx.strokeRect(x, y, w, h);
+            ctx.shadowBlur = 0;
+            ctx.fillStyle = 'rgba(0,0,0,0.6)';
+            const textStr = `${label} ${Math.round(score * 100)}%`;
+            const textWidth = ctx.measureText(textStr).width;
+            ctx.fillRect(x, y > 20 ? y - 20 : y, textWidth + 8, 18);
             ctx.fillStyle = ctx.strokeStyle;
-            ctx.font = '12px monospace';
-            ctx.fillText(`${label} ${Math.round(score * 100)}%`, x, y > 15 ? y - 5 : y + 15);
+            ctx.font = 'bold 12px monospace';
+            ctx.fillText(textStr, x + 4, y > 20 ? y - 6 : y + 14);
         }
         function handleDetection(camId, data) {
             if (!window.latestDetections) window.latestDetections = {};

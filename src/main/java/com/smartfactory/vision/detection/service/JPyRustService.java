@@ -9,7 +9,7 @@ import jakarta.annotation.PreDestroy;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
+
 import java.util.Map;
 import java.util.concurrent.*;
 
@@ -28,37 +28,43 @@ public class JPyRustService {
 
     @PostConstruct
     public void init() {
-        log.info("[Multi-Stream] Initializing Process Pool in {}", workDir);
-        try {
-            JPyRustBridge.initialize(workDir, workDir, "yolov8n.pt", 0.5f);
-
-            for (String cam : List.of("cam1", "cam2")) {
-                log.info("[Multi-Stream] Spawning worker for {}", cam);
-                bridges.put(cam, new JPyRustBridge());
-                Thread.sleep(2000); 
-            }
-            log.info("[Multi-Stream] Pool ready. Active bridges: {}", bridges.size());
-        } catch (Exception e) {
-            log.error("[Multi-Stream] Failed to initialize bridges", e);
-        }
+        log.info("[Multi-Stream] Initializing Process Pool Manager in {}", workDir);
+        // Bridges are now lazy-loaded
     }
 
     @PreDestroy
     public void cleanup() {
         log.info("[Multi-Stream] Shutting down bridge pool...");
         executor.shutdown();
+        bridges.values().forEach(bridge -> {
+            try {
+                bridge.close();
+            } catch (Exception e) {
+                log.error("Error closing bridge", e);
+            }
+        });
         bridges.clear();
     }
 
-    public CompletableFuture<String> detectAsync(String cameraId, byte[] imageBytes) {
-        JPyRustBridge bridge = bridges.get(cameraId);
-        if (bridge == null) {
-            log.warn("Unknown camera ID: {}", cameraId);
-            return CompletableFuture.completedFuture("{\"error\": \"Unknown Camera ID\"}");
-        }
+    private JPyRustBridge getBridge(String cameraId) {
+        return bridges.computeIfAbsent(cameraId, id -> {
+            log.info("[Multi-Stream] Spawning new worker for {}", id);
+            try {
+                JPyRustBridge bridge = new JPyRustBridge(id);
+                bridge.initialize(workDir);
+                log.info("[Multi-Stream] Worker {} ready", id);
+                return bridge;
+            } catch (Exception e) {
+                log.error("Failed to initialize worker for {}", id, e);
+                throw new RuntimeException("Bridge init failed", e);
+            }
+        });
+    }
 
+    public CompletableFuture<String> detectAsync(String cameraId, byte[] imageBytes) {
         return CompletableFuture.supplyAsync(() -> {
             try {
+                JPyRustBridge bridge = getBridge(cameraId);
                 log.info("[AI] Processing frame for {} ({} bytes)...", cameraId, imageBytes.length);
 
                 ByteBuffer buffer = ByteBuffer.allocateDirect(imageBytes.length);
@@ -66,7 +72,6 @@ public class JPyRustService {
                 buffer.flip();
 
                 byte[] resultBytes = bridge.processImage(
-                        workDir,
                         buffer,
                         imageBytes.length,
                         640, 480, 3);
