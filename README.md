@@ -1,11 +1,12 @@
-# 🏭 SmartFactory-Vision
+# 🏭 SmartFactory-Vision Ver 1.3.0
 
-> **"Real-Time AI-Powered Factory Inspection: Multi-Stream Architecture with JPyRust."**
+> **"Real-Time AI-Powered Factory Inspection System: Multi-Stream Architecture via JPyRust"**<br>
+> An intelligent smart factory platform fully equipped with live webcam feeds, ultra-high-speed AI inference (JPyRust), real-time monitoring (3D Digital Twin), and **integration with physical machinery control networks (Soft-PLC)**.
 
 ![Build Status](https://img.shields.io/github/actions/workflow/status/farmer0010/SmartFactory-Vision/build.yml?style=flat-square&logo=github&label=Build)
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2.1-brightgreen?style=flat-square&logo=spring-boot)
 [![Java](https://img.shields.io/badge/Java-17+-orange?style=flat-square&logo=openjdk)](https://openjdk.org/)
-[![JPyRust](https://img.shields.io/badge/JPyRust-v1.2.0-blue?style=flat-square)](https://github.com/farmer0010/JPyRust)
+[![JPyRust](https://img.shields.io/badge/JPyRust-v1.3.1-blue?style=flat-square)](https://github.com/farmer0010/JPyRust)
 [![Python](https://img.shields.io/badge/Python-3.11-blue?style=flat-square&logo=python)](https://www.python.org/)
 
 [🇰🇷 한국어 버전 (README_KR.md)](README_KR.md)
@@ -14,237 +15,294 @@
 
 ## 💡 Introduction
 
-**SmartFactory-Vision** is a high-performance AI vision inspection system built with **Spring Boot** and powered by **JPyRust** for native-speed Python AI inference.
+**SmartFactory-Vision** is a real-time AI vision inspection system built on **Spring Boot** paired with **JPyRust** granting native-level Python inference velocities without sacrificing Java's ecosystem stability.
 
-The system supports multiple simultaneous camera streams, processing them through a managed AI worker pool, persisting detection history in an H2 database, and pushing real-time overlays to a 2x2 grid dashboard via WebSocket (STOMP).
-
----
-
-## ✨ Key Features
-
-| Feature | Description |
-|---------|-------------|
-| 📹 **Multi-Stream Support** | Simultaneous monitoring of up to 4 camera feeds in a 2x2 grid |
-| 🧠 **AI Worker Pool** | Managed pool of JPyRust workers for parallel image processing |
-| 🗄️ **Detection History** | Automatic persistence of all detection logs to H2/JPA database |
-| ⚡ **Performance** | ~40ms GPU / ~100ms CPU per frame (Shared Memory bridge) |
-| 📡 **WebSocket Push** | Camera-specific topics for low-latency live results |
-| 🖥️ **Sci-Fi Dashboard** | Neon-themed control panel with FPS chart & detection logs |
+Going far beyond simple monitoring, it captures 4-channel multi-stream environments, conducts parallel image inferences, asynchronously stores detection histories into a Database, and tightly integrates with real-world physical machinery (PLC), immediately triggering physical actions upon defect detection. This is designed as a Full-Stack industrial solution.
 
 ---
 
-## 🏗️ Architecture
+## 🏗️ System Architecture
+
+> **Browser - Spring Boot - Native AI - Factory Floor Integrated Architecture**<br>
+> Live frames are shunted via JPyRust directly into Native Shared Memory for instant YOLOv8 processing. Findings are subsequently synced real-time to the 3D Digital Twin GUI and the actual Modbus PLC facilities.
 
 ```mermaid
 graph TD
-    subgraph "Browser (Client)"
-        C1["📷 CAM-1"]
-        C2["📷 CAM-2"]
-        C3["📷 CAM-3"]
-        C4["📷 CAM-4"]
-        UI["🖥️ 2x2 Dashboard UI"]
+    %% Client and Entry Point
+    Client(["Browser Client<br>Dashboard & 3D Twin"]) -->|HTTP / WebSockets| SpringBoot["☕ Spring Boot 3.2<br>Core Backend Server"]
+
+    %% Camera Feeds
+    subgraph Camera_Feeds ["Camera Feeds"]
+        CAM1["📹 WebCam 1"] -->|POST /frame 4FPS| SpringBoot
+        CAM2["📹 WebCam 2"] -->|POST /frame 4FPS| SpringBoot
     end
 
-    subgraph "Spring Boot Backend"
-        WC["WebcamController"]
-        Pool["🧠 AI Service Pool"]
-        subgraph "Persistence"
-            DHS["DetectionHistoryService"]
-            DB[("H2 Database")]
-        end
-        WS["WebSocket Broker"]
+    %% Backend Area
+    subgraph Backend_System ["Backend System"]
+        SpringBoot -->|"Queue Tasks"| Pool["🧠 JPyRust Pool<br>AI Service Manager"]
+        Pool -.->|"Push Results"| WS["WebSocket Broker<br>Topic: /detections"]
+        WS -->|"STOMP"| Client
+        SpringBoot -->|"Defect Trigger"| PLC_Service["⚙️ PlcControlService<br>Modbus/TCP"]
     end
 
-    subgraph "JPyRust Native Layer"
-        Bridge["JPyRustBridge (Native)"]
-        SHM["Shared Memory"]
-        Daemon["Python Daemon"]
-        YOLO["YOLOv8 Model"]
+    %% JPyRust Layer
+    subgraph Native_AI_Layer ["Native AI Layer (JPyRust)"]
+        Pool -->|"JNI Call"| Bridge["JPyRustBridge<br>Native Library"]
+        Bridge -->|"Shared Memory"| SHM["RAM: Shared Memory"]
+        SHM -->|"IPC Memory Read"| PythonDaemon["Python Daemon<br>YOLOv8 Engine"]
+        PythonDaemon -->|"JSON Output"| Pool
     end
 
-    C1 & C2 & C3 & C4 -- "POST /api/stream/frame?camId=X" --> WC
-    WC -- "Queue Tasks" --> Pool
-    Pool -- "Direct Map" --> Bridge
-    Bridge -- "IPC" --> SHM
-    SHM -- "Inference" --> Daemon
-    Daemon --> YOLO
-    
-    YOLO -- "Result JSON" --> Pool
-    Pool -- "Async Save" --> DHS
-    DHS --> DB
-    
-    Pool -- "Push Topic /detections/camX" --> WS
-    WS -- "STOMP" --> UI
+    %% Storage and Hardware Layer
+    subgraph Factory_Storage ["Factory Floor & Storage"]
+        PLC_Service -->|"Write Coil Port 502"| Slave["🏭 PLC Slave mdslave"]
+        Pool -->|"Async Save"| DB[("🐬 MariaDB<br>History Storage")]
+    end
 ```
 
-### Data Flow
+<br>
 
-1. **Capture** — Browser captures webcam frame as JPEG blob (~25 FPS).
-2. **Upload** — Frame sent via `POST /api/stream/frame?camId=camX` (multipart).
-3. **Inference** — JPyRust processes image through Shared Memory bridge to a persistent Python YOLOv8 daemon.
-4. **Persistence** — Detection results are parsed and saved asynchronously to the H2 database.
-5. **Push** — Results pushed to specific browser topics (e.g., `/topic/detections/cam1`).
-6. **Render** — 2x2 grid UI draws bounding boxes and labels on the corresponding canvas.
+## 🗺️ User Flow & Data Logic
 
----
+> Core flow highlighting webcam frame capture moving through AI inference, rendering on the 3D layout, over to the physical robot manipulation.
 
-## 📊 Performance
+```mermaid
+flowchart TD
+    classDef start fill:#f9f,stroke:#333,stroke-width:2px,color:black;
+    classDef process fill:#e1f5fe,stroke:#0277bd,stroke-width:2px,color:black;
+    classDef decision fill:#fff9c4,stroke:#fbc02d,stroke-width:2px,color:black;
+    classDef endNode fill:#eeeeee,stroke:#333,stroke-width:2px,color:black;
 
-| Metric | Target | Result |
-|--------|:-----:|:------:|
-| **Max Streams** | 4 | Verified (2x2 Grid) |
-| **AI Inference (GPU)** | < 50ms | ~42ms (NVIDIA CUDA) |
-| **AI Inference (CPU)** | < 150ms | ~100ms fallback |
-| **Persistence Delay** | < 10ms | Async Non-blocking |
-| **End-to-End Latency** | < 250ms | Verified |
+    Start((Capture)):::start --> Upload["Capture & Upload Frame<br>(4 FPS Throttling)"]:::process
+    Upload --> Bridge["JPyRust Bridge<br>Copy to Shared Memory"]:::process
+    
+    Bridge --> AI_Check{"YOLOv8 Inference Check"}:::decision
+    
+    AI_Check -- "Pass (Clean)" --> WS_Push["WebSocket Result Broadcast"]:::process
+    AI_Check -- "Defect / NG" --> Action_Defect["Trigger Defect Event"]:::process
+    
+    Action_Defect --> PLC_Call["⚙️ Modbus TCP Comm<br>Execute mdslave hook"]:::process
+    Action_Defect --> DB_Save["🗄️ Async Defect Save<br>MariaDB JPA"]:::process
+    
+    PLC_Call --> WS_Push
+    DB_Save --> WS_Push
+    
+    WS_Push --> Client_Render{"Browser UI WebGL Render"}:::decision
+    Client_Render -- "2D Canvas" --> Draw_Bbox["Draw Bounding Box(BBox)"]:::process
+    Client_Render -- "3D WebGL" --> Twin_Anim["Three.js Robot Arm Animates"]:::process
+    
+    Draw_Bbox --> End((Done)):::endNode
+    Twin_Anim --> End
+```
 
----
+<br>
 
-## 🖥️ Dashboard
+## 📂 Project Structure
 
-The web dashboard features a **Sci-Fi themed control panel** optimized for multi-camera monitoring:
+> **Core Architecture:** Layered Architecture (Controller - Service - Repository)<br>
 
-- 🎥 **2x2 Video Grid**: Four simultaneous feeds with scan-line animation.
-- 📊 **Real-Time FPS Chart**: Chart.js line graph showing system stability.
-- 🎯 **Confidence Gauge**: Animated progress bar for max detection probability.
-- 📋 **Integrated Log**: Color-coded detection history (defects highlighted in red).
-- 🟢 **Connection Status**: Real-time STOMP connection monitoring.
+```text
+.
+├── build.gradle.kts                # Dependencies: Spring Boot, JPyRust, j2mod, MariaDB, JPA
+├── src
+│   └── main
+│       ├── java/com/smartfactory/vision
+│       │   ├── VisionApplication.java        # Main Execute (@EnableAsync)
+│       │   │
+│       │   ├── control                       # [PLC Control]
+│       │   │   └── PlcControlService.java    # j2mod based Modbus TCP triggers
+│       │   │
+│       │   ├── dashboard                     # [Dashboard & API]
+│       │   │   ├── controller
+│       │   │   │   ├── DashboardController.java
+│       │   │   │   └── HistoryRestController.java # [New] Historic log fetch REST APIs
+│       │   │   │
+│       │   ├── detection                     # [AI Detection & Persistence]
+│       │   │   ├── entity
+│       │   │   │   ├── DetectionLog.java     # JPA Log Entity
+│       │   │   │   └── DefectHistory.java    # Dedicated JPA Defect Entity
+│       │   │   ├── repository
+│       │   │   │   ├── DetectionLogRepository.java
+│       │   │   │   └── DefectHistoryRepository.java
+│       │   │   └── service
+│       │   │       ├── JPyRustService.java   # JPyRust Worker Pool Setup
+│       │   │       └── DetectionHistoryService.java # [New] Async DB Persistence Logic
+│       │   │
+│       │   └── stream                        # [Stream]
+│       │       ├── config/WebSocketConfig.java
+│       │       └── controller/WebcamController.java # Multipart upload handler
+│       │
+│       └── resources
+│           ├── application.yml               # DB, Logging, and Directory Configs
+│           ├── static/                       # CSS (Tailwind, Neon), JS, Images
+│           └── templates/                    # Thymeleaf View Layer
+│               ├── index.html                # 2x2 Multi Cam Dashboard Control Panel
+│               ├── twin.html                 # 3D Three.js Digital Twin dedicated view
+│               └── history.html              # History List UI
+│
+└── External Modules/                         # [External] Modbus Slave Simulator Guide (bottom)
+```
 
----
+<br>
 
-## 🚀 Quick Start
+## 📊 Database Schema (ERD)
 
-### Prerequisites
+> **Entity Relationship Diagram**<br>
+> Relational Database constraints for the analytical detection system spanning MariaDB endpoints. (Added Phase 5)
 
-- **Java 17+**
-- **Webcam** (Internal or USB)
-- **Windows 10/11** (Optimized for Native SHMEM)
+```mermaid
+erDiagram
+    %% Relationship Models
+    CAMERA ||--o{ DETECTION_LOG : "creates overall logs"
+    CAMERA ||--o{ DEFECT_HISTORY : "records on defects"
 
-### 1. Clone & Run
+    %% Entities
+    CAMERA {
+        String camId PK "UID of Camera Feed"
+        String location "Camera Grid Location"
+        String status "Operating Status"
+    }
 
+    DETECTION_LOG {
+        Long id PK
+        String camId FK "Camera ID"
+        LocalDateTime timestamp "Exact inference time"
+        Integer totalObjectsDetected "Total detected entities"
+        Double maxConfidence "Peak confidence score"
+    }
+
+    DEFECT_HISTORY {
+        Long id PK
+        String camId FK "Camera ID"
+        LocalDateTime timestamp "Defect occurrence time"
+        String defectType "Type (NG / defect)"
+        Double confidence "Defect probability"
+    }
+```
+
+<br>
+
+## 🚀 Key Features
+
+### 1. ⚡ Ultra-fast AI Video Processing (JPyRust Shared Memory IPC)
+* **Ultra-low Latency Inference:** Provisioned Shared Memory buffers exist dynamically between JVM heaps and the Python execution engine, completely eviscerating bulky image serialization lags.
+* **Isolated Worker Pool:** Assigns an isolated persistent Python process for each independent camera channel allowing threadless, lock-free parallel execution.
+
+### 2. 🗜️ Adaptive Stream Throttling Control
+* **4 FPS Auto-Control:** Limits traffic strictly to 4 frames per second per camera. By normalizing inputs, browser thread load minimizes drastically, shutting off Tomcat memory leaks and assuring non-stop factory tracking.
+
+### 3. 🏭 Soft-PLC Modbus Direct Hardware Actions
+* **Immediate Interjection:** If a `defect` object passes, `PlcControlService` intercepts and controls physical IO states inside the plant. 
+* **Write Coil(0):** Utilizes standard Modbus TCP bindings (Port 502) instructing external PLC Modules or a standard simulated server (`mdslave`) to activate discard actuators.
+
+### 4. 🤖 3D Digital Twin Monitoring (Three.js WebGL)
+* **Live Synchronization:** Generates a real-time WebGL robotic structure right on your browser. Any signals dispatched to hardware PLCs replicate across the 3D twin with flashing warning animations directly matching factory motions.
+
+### 5. 🗄️ Persistence & Analytical Storage (MariaDB)
+* **Asynchronous Inserts:** Supported by Spring `@Async` threads, log traces and defect alerts deploy to external MariaDB networks simultaneously without blocking critical YOLOv8 visual tasks.
+
+### 6. 🖥️ Hardcore Sci-Fi Monitoring Dashboard
+* **2x2 Grid Formats:** Reactively rescales across diverse monitors. Incorporates high-contrast Cyberpunk/Neon CSS traits. 
+* **Virtual "Simulate Defect" Protocol:** Contains a specialized bypass button testing the entire hardware/network architecture's behavior safely simulating failures over `mdslave`. 
+
+<br>
+
+## ⚙️ Setup & Run
+
+### 1. Requirements
+* **OS:** Windows Environment Required (Underpinned by Native JPyRust Shared Memory `.dll` bindings)
+* **Python Path:** Assure your directory conforms correctly to: `C:\Users\{USERNAME}\.jpyrust\python_dist`
+
+### 2. Database Connection (MariaDB)
+The `src/main/resources/application.yml` anchors to a standard MariaDB installation.
+* Connection Target: `jdbc:mariadb://localhost:3306/smartfactory`
+* Credentials: `root` users, with blank passwords defaults.
+* *(Switch properties out for standard inline JVM H2 databases if local port hosting proves problematic)*
+
+### 3. Modbus Slave Simulator Setups (`mdslave`) 🚀
+For simulating authentic factory logic, deploying an external Modbus Slave instance named `mdslave` is absolutely essential.
+
+1. **Install Python Modbus Package:**
+   ```bash
+   pip install pyModbusTCP
+   ```
+2. **Execute Simulator Script:** Copy the block underneath and execute it as `mdslave.py`. It actively binds standard Modbus defaults onto port `502` using local loopback `127.0.0.1`.
+   ```python
+   from pyModbusTCP.server import ModbusServer
+   # Activating server on localhost port 502
+   server = ModbusServer(host="127.0.0.1", port=502, no_block=True)
+   
+   try:
+       print("Modbus Slave Server Running... (Port: 502)")
+       server.start()
+       while True:
+           # Loop or logic handling area
+           pass
+   except KeyboardInterrupt:
+       server.stop()
+       print("Server shutdown")
+   ```
+3. **Verify:** Upon testing defect signals, expect "PLC trigger success" readouts spanning across Spring Boot backend logging prompts.
+
+### 4. Build and Execute
+Ensure DBs and PLCs are properly initialized.
 ```bash
-# Clone
-git clone https://github.com/farmer0010/SmartFactory-Vision.git
-cd SmartFactory-Vision
+# 1. Start Gradle Compiler
+gradlew.bat clean build -x test
 
-# Build & Run (First launch downloads Python env & YOLO model)
-./gradlew bootRun
+# 2. Hot Run Application
+gradlew.bat bootRun
 ```
 
-### 2. Open Dashboard
+### 5. Interaction Pointers
+* **Main Feed Analytics Control Dashboard:** `http://localhost:8080/`
+* **3D Virtual Twin Direct Views:** `http://localhost:8080/twin`
+* **Historic Logs DB Table:** `http://localhost:8080/history`
 
-Access the interface at: `http://localhost:8080`
+> **Note:** Acknowledge security camera access over Chromium. Upon start, 4 individual cloned pipelines initiate. Hit "Test Defect Response" mapping to verify Modbus and WebGL red alert loops safely!
 
-> 💡 Allow camera access in the browser. The system will automatically simulate 4 streams using the active camera input.
+<br>
 
----
+## 🛠 Tech Stack
 
-## 📁 Project Structure
+| Layer | Specialization Utilities & Frameworks |
+| :--- | :--- |
+| **Backend Core** | Java 17, **Spring Boot 3.2.1**, Spring WebSockets, Spring Data JPA |
+| **AI Inference** | **JPyRust (v1.3.1)**, Shared Memory C/C++ Binding, **YOLOv8** (Python 3.12) |
+| **Data Persistence** | **MariaDB 10.x**, H2 Database (Dev only) |
+| **IoT Control**| **j2mod** (Java Modbus), Soft-PLC (`mdslave`) |
+| **Frontend UI** | HTML5 Canvas Arrays, Vanilla JS, **Three.js** (WebGL 3D Models), Chart.js |
+| **Infra & DevOps** | Gradle, Git Versioning |
 
-```
-SmartFactory-Vision/
-├── build.gradle.kts              # Dependencies (Spring Boot, JPyRust v1.2.0)
-├── gradlew / gradlew.bat         # Gradle Wrapper
-├── src/main/
-│   ├── java/com/smartfactory/vision/
-│   │   ├── VisionApplication.java           # Spring Boot Entry & Async Enable
-│   │   ├── dashboard/controller/
-│   │   │   ├── DashboardController.java     # View Controller
-│   │   │   └── HistoryRestController.java   # History API
-│   │   ├── detection/
-│   │   │   ├── entity/DetectionLog.java     # JPA Entity
-│   │   │   ├── repository/                  # JPA Repository
-│   │   │   └── service/
-│   │   │       ├── JPyRustService.java      # AI Worker Pool Logic
-│   │   │       └── DetectionHistoryService.java # Persistence Logic
-│   │   └── stream/controller/
-│   │       └── WebcamController.java        # Frame Stream API
-│   └── resources/
-│       ├── application.yml                  # WorkDir & Database Config
-│       └── templates/
-│           ├── index.html                   # Multi-stream Dashboard
-│           └── history.html                 # Analysis View
-└── README.md
-```
-
----
-
-## ⚙️ Configuration
-
-### `application.yml`
-```yaml
-app:
-  ai:
-    work-dir: ${user.home}/.jpyrust
-    model-path: yolov8n.pt
-
-spring:
-  datasource:
-    url: jdbc:h2:file:${user.home}/.jpyrust/historydb
-```
-
-### `build.gradle.kts`
-```kotlin
-dependencies {
-    implementation("com.github.farmer0010:JPyRust:v1.2.0")
-    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-    implementation("com.h2database:h2")
-}
-```
-
----
-
-## 🔧 Troubleshooting
-
-### Q. `WinError 5` (Access Denied) error?
-**A.** Resolved in JPyRust v1.2.0. Ensure you are using the latest version as standardized in the dependencies.
-
-### Q. Detection results are not persisting?
-**A.** Check if H2 database file is created in `~/.jpyrust/`. Ensure `@EnableAsync` is active in `VisionApplication`.
-
-### Q. Camera stream is slow?
-**A.** Check if GPU is detected (logs will show "CUDA detected"). If on CPU, try reducing `sendInterval` in `index.html`.
-
----
-
-## 🛠️ Tech Stack
-
-| Layer | Technology |
-|-------|-----------|
-| **Backend** | Spring Boot 3.2, Java 17, JPA/Hibernate |
-| **AI Bridge** | JPyRust v1.2.0 (Rust JNI + Python Daemon) |
-| **Database** | H2 (File-based) |
-| **Frontend** | Tailwind CSS, Chart.js, SockJS, STOMP.js |
-
----
+<br>
 
 ## 📜 Version History
 
-| Version | Date | Changes |
+| Ver | Date | Enhancements |
 |---------|------|---------|
-| **v1.2.1** | 2026-02 | **Maintenance:** Code cleanup and documentation restoration. |
-| **v1.2.0** | 2026-02 | **Phase 2:** Multi-Stream (2x2 Grid), Worker Pool, History Persistence. |
-| **v1.0.0** | 2026-02 | Initial release with single-stream YOLO detection. |
+| **v1.3.0** | 2026-02 | **Phase 3/4/5:** Soft-PLC Modbus hardware commands, 3D WebGL Digital Twin structures, MariaDB relational persistence integrations. |
+| **v1.2.1** | 2026-02 | **Maintenance:** Codebase optimizations, documentation styling upgraded to (42Cabi) styles. |
+| **v1.2.0** | 2026-02 | **Phase 2:** Multi Stream (2x2 Grid), Async Worker Pool infrastructural advancements. |
+| **v1.0.0** | 2026-02 | Solo feed YOLO detection & STOMP pipeline initial release. |
 
----
+<br>
 
-## � Roadmap
+## 📅 Roadmap
 
-- [x] Multi-camera support (Phase 2)
-- [x] Detection history persistence
-- [x] 2x2 High-density grid UI
-- [ ] Custom Model Training Integration
-- [ ] Dockerized Deployment
+- [x] Multi-camera capability completion (Phase 2)
+- [x] Soft-PLC live physics hardware controls (Phase 3)
+- [x] WebGL 3D graphical digital twin (Phase 4)
+- [x] Defect database history archive system (Phase 5 WIP)
+- [ ] Aggregate statistical frontend analysis views using historical Big Data.
+- [ ] Implement Dockerized independent microservice distributions & CI/CD networks.
 
----
+<br>
 
 ## 📄 License
+MIT License.
 
-MIT License
-
----
-
+<br>
 <p align="center">
   <b>🏭 SmartFactory-Vision</b><br>
-  <i>Empowering Manufacturing with Next-Gen AI Vision.</i>
+  <i>Supercharging production via Next-Gen IT architectures.</i>
 </p>
