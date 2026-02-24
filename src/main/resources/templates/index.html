@@ -417,16 +417,24 @@
                 });
                 video.srcObject = stream;
                 await video.play();
-                video.onloadedmetadata = () => {
-                    cameras.forEach(camId => {
-                        const c = canvasMap[camId];
-                        if (c) { c.width = video.videoWidth; c.height = video.videoHeight; }
-                        const s = document.getElementById(`camStatus-${camId}`);
-                        if (s) s.style.display = 'none';
-                    });
-                    addLog("System", `Webcam Initialized: ${video.videoWidth}x${video.videoHeight}`, "success");
-                    startStreaming();
+
+                const checkVideoReady = () => {
+                    if (video.videoWidth > 0 && video.videoHeight > 0) {
+                        cameras.forEach(camId => {
+                            const c = canvasMap[camId];
+                            if (c) { c.width = video.videoWidth; c.height = video.videoHeight; }
+                            const s = document.getElementById(`camStatus-${camId}`);
+                            if (s) s.style.display = 'none';
+                        });
+                        addLog("System", `Webcam Initialized: ${video.videoWidth}x${video.videoHeight}`, "success");
+                        startStreaming();
+                    } else {
+                        requestAnimationFrame(checkVideoReady);
+                    }
                 };
+
+                checkVideoReady();
+
             } catch (err) {
                 addLog("System", "Webcam Access Denied: " + err.message, "error");
                 cameras.forEach(camId => {
