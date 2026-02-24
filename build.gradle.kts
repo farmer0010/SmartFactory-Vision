@@ -32,6 +32,10 @@ dependencies {
     annotationProcessor("org.projectlombok:lombok")
     implementation("com.github.farmer0010:JPyRust:v1.3.1")
     implementation("me.paulschwarz:spring-dotenv:4.0.0")
+    
+    // For Excel/CSV and PDF generation
+    implementation("com.opencsv:opencsv:5.7.1")
+    implementation("com.itextpdf:itextpdf:5.5.13.3")
 }
 
 tasks.withType<Test> {

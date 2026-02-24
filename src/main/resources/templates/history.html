@@ -93,85 +93,149 @@
     </header>
 
     <!-- Main Content -->
-    <main class="flex-1 grid grid-cols-12 gap-4 p-4 min-h-0">
-        <!-- Chart Area (Left) -->
-        <div class="col-span-4 flex flex-col space-y-4 min-h-0">
+    <main class="flex-1 grid grid-cols-12 gap-4 p-4 min-h-0 overflow-y-auto">
+        <!-- Top Analytics Row -->
+        <div class="col-span-12 grid grid-cols-3 gap-4 h-64">
+
+            <!-- Ratio Doughnut -->
             <div
-                class="bg-slate-800 p-4 rounded-lg border border-cyan-900/50 shadow-[0_0_15px_rgba(0,0,0,0.5)] flex-1 flex flex-col">
+                class="bg-slate-800 p-4 rounded-lg border border-cyan-900/50 shadow-[0_0_15px_rgba(0,0,0,0.5)] flex flex-col">
                 <h3
-                    class="text-xs font-bold uppercase border-b border-cyan-900/30 pb-2 mb-4 text-slate-300 tracking-wider">
+                    class="text-xs font-bold uppercase border-b border-cyan-900/30 pb-2 mb-2 text-slate-300 tracking-wider">
                     Detection Ratio (Recent 50)</h3>
-                <div class="flex-1 relative w-full h-full flex items-center justify-center">
+                <div class="flex-1 relative w-full flex items-center justify-center">
                     <canvas id="ratioChart"></canvas>
                 </div>
-                <div class="mt-4 flex justify-around text-xs border-t border-cyan-900/30 pt-4">
+                <div class="mt-2 flex justify-around text-xs border-t border-cyan-900/30 pt-2">
                     <div class="text-center">
                         <div class="text-slate-400 mb-1">Total Logs</div>
                         <div id="totalCount"
-                            class="text-3xl font-bold text-white drop-shadow-[0_0_5px_rgba(255,255,255,0.5)]">0</div>
+                            class="text-2xl font-bold text-white drop-shadow-[0_0_5px_rgba(255,255,255,0.5)]">0</div>
                     </div>
                     <div class="text-center">
                         <div class="text-slate-400 mb-1">Defect Rate</div>
                         <div id="defectRate"
-                            class="text-3xl font-bold text-red-400 drop-shadow-[0_0_5px_rgba(248,113,113,0.5)]">0%</div>
+                            class="text-2xl font-bold text-red-400 drop-shadow-[0_0_5px_rgba(248,113,113,0.5)]">0%</div>
                     </div>
                 </div>
             </div>
+
+            <!-- Yield Line Chart -->
+            <div
+                class="bg-slate-800 p-4 rounded-lg border border-cyan-900/50 shadow-[0_0_15px_rgba(0,0,0,0.5)] flex flex-col">
+                <h3
+                    class="text-xs font-bold uppercase border-b border-cyan-900/30 pb-2 mb-2 text-slate-300 tracking-wider">
+                    Yield Monitoring (24h)</h3>
+                <div class="flex-1 relative w-full h-full flex items-center justify-center pt-2">
+                    <canvas id="yieldChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Heatmap Bar Chart -->
+            <div
+                class="bg-slate-800 p-4 rounded-lg border border-cyan-900/50 shadow-[0_0_15px_rgba(0,0,0,0.5)] flex flex-col">
+                <h3
+                    class="text-xs font-bold uppercase border-b border-cyan-900/30 pb-2 mb-2 text-slate-300 tracking-wider">
+                    Defect Heatmap (Camera)</h3>
+                <div class="flex-1 relative w-full h-full flex items-center justify-center pt-2">
+                    <canvas id="heatmapChart"></canvas>
+                </div>
+            </div>
+
         </div>
 
-        <!-- Table Area (Right) -->
-        <div
-            class="col-span-8 bg-slate-800 rounded-lg border border-cyan-900/50 shadow-[0_0_15px_rgba(0,0,0,0.5)] flex flex-col min-h-0 overflow-hidden relative group">
-            <div class="scan-line opacity-20"></div>
-            <div class="p-4 border-b border-cyan-900/50 bg-slate-800/80 z-20 flex justify-between items-center">
-                <h3 class="text-xs font-bold uppercase text-slate-300 tracking-wider">Recent Detection Logs</h3>
-                <button onclick="fetchHistory()"
-                    class="text-[10px] border border-cyan-700 text-cyan-400 hover:bg-cyan-900/50 px-3 py-1.5 rounded transition-colors uppercase font-bold tracking-wider">Refresh
-                    Data</button>
+        <!-- Bottom Row (Table + Reports) -->
+        <div class="col-span-12 grid grid-cols-12 gap-4 flex-1">
+
+            <!-- Table Area -->
+            <div
+                class="col-span-9 bg-slate-800 rounded-lg border border-cyan-900/50 shadow-[0_0_15px_rgba(0,0,0,0.5)] flex flex-col h-[500px] overflow-hidden relative group">
+                <div class="scan-line opacity-20"></div>
+                <div class="p-4 border-b border-cyan-900/50 bg-slate-800/80 z-20 flex justify-between items-center">
+                    <h3 class="text-xs font-bold uppercase text-slate-300 tracking-wider">Recent Detection Logs</h3>
+                    <button onclick="fetchAllData()"
+                        class="text-[10px] border border-cyan-700 text-cyan-400 hover:bg-cyan-900/50 px-3 py-1.5 rounded transition-colors uppercase font-bold tracking-wider">Refresh
+                        Data</button>
+                </div>
+                <div class="flex-1 overflow-auto z-20">
+                    <table class="w-full text-left text-sm text-slate-300">
+                        <thead
+                            class="text-[10px] uppercase bg-slate-900/50 text-slate-400 sticky top-0 backdrop-blur-md z-10 border-b border-cyan-900/50">
+                            <tr>
+                                <th class="px-4 py-3">ID</th>
+                                <th class="px-4 py-3">Timestamp</th>
+                                <th class="px-4 py-3">Camera</th>
+                                <th class="px-4 py-3">Label</th>
+                                <th class="px-4 py-3">Confidence</th>
+                                <th class="px-4 py-3">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyTableBody" class="font-mono text-[11px] divide-y divide-slate-700/50">
+                            <tr>
+                                <td colspan="6" class="p-4 text-center text-slate-500 italic">Connecting to Database...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
-            <div class="flex-1 overflow-auto z-20">
-                <table class="w-full text-left text-sm text-slate-300">
-                    <thead
-                        class="text-[10px] uppercase bg-slate-900/50 text-slate-400 sticky top-0 backdrop-blur-md z-10 border-b border-cyan-900/50">
-                        <tr>
-                            <th class="px-4 py-3">ID</th>
-                            <th class="px-4 py-3">Timestamp</th>
-                            <th class="px-4 py-3">Camera</th>
-                            <th class="px-4 py-3">Label</th>
-                            <th class="px-4 py-3">Confidence</th>
-                            <th class="px-4 py-3">Status</th>
-                        </tr>
-                    </thead>
-                    <tbody id="historyTableBody" class="font-mono text-[11px] divide-y divide-slate-700/50">
-                        <!-- Data will be populated here -->
-                        <tr>
-                            <td colspan="6" class="p-4 text-center text-slate-500 italic">Connecting to Database...</td>
-                        </tr>
-                    </tbody>
-                </table>
+
+            <!-- Report Export Area -->
+            <div
+                class="col-span-3 bg-slate-800 p-4 rounded-lg border border-cyan-900/50 shadow-[0_0_15px_rgba(0,0,0,0.5)] flex flex-col h-[500px]">
+                <h3
+                    class="text-xs font-bold uppercase border-b border-cyan-900/30 pb-2 mb-4 text-slate-300 tracking-wider text-center">
+                    Export Reports</h3>
+
+                <div class="flex-1 flex flex-col justify-center space-y-6 px-4">
+                    <p class="text-[11px] text-slate-400 mb-4 text-center">Download automated QA inspection reports for
+                        management review.</p>
+
+                    <a href="/api/history/report/csv"
+                        class="group flex flex-col items-center justify-center p-4 rounded-xl border border-emerald-700/50 bg-emerald-900/20 hover:bg-emerald-800/40 transition-all shadow-[0_0_10px_rgba(16,185,129,0.1)] hover:shadow-[0_0_15px_rgba(16,185,129,0.4)]">
+                        <svg class="w-10 h-10 text-emerald-400 mb-2 group-hover:scale-110 transition-transform"
+                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                            </path>
+                        </svg>
+                        <span class="text-sm font-bold text-emerald-300 tracking-widest uppercase">Export CSV</span>
+                        <span class="text-[10px] text-emerald-500/70 mt-1">Raw Dataset for Excel</span>
+                    </a>
+
+                    <a href="/api/history/report/pdf"
+                        class="group flex flex-col items-center justify-center p-4 rounded-xl border border-rose-700/50 bg-rose-900/20 hover:bg-rose-800/40 transition-all shadow-[0_0_10px_rgba(244,63,94,0.1)] hover:shadow-[0_0_15px_rgba(244,63,94,0.4)]">
+                        <svg class="w-10 h-10 text-rose-400 mb-2 group-hover:scale-110 transition-transform" fill="none"
+                            stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z">
+                            </path>
+                        </svg>
+                        <span class="text-sm font-bold text-rose-300 tracking-widest uppercase">Export PDF</span>
+                        <span class="text-[10px] text-rose-500/70 mt-1">Formatted QA Document</span>
+                    </a>
+                </div>
             </div>
+
         </div>
     </main>
 
     <script>
         let ratioChart = null;
+        let yieldChart = null;
+        let heatmapChart = null;
 
-        function initChart() {
-            const ctx = document.getElementById('ratioChart').getContext('2d');
-            ratioChart = new Chart(ctx, {
+        function initCharts() {
+            // Doughnut Chart (Ratio)
+            const ctxRatio = document.getElementById('ratioChart').getContext('2d');
+            ratioChart = new Chart(ctxRatio, {
                 type: 'doughnut',
                 data: {
                     labels: ['OK', 'DEFECT'],
                     datasets: [{
                         data: [0, 0],
-                        backgroundColor: [
-                            'rgba(34, 211, 238, 0.8)', // Cyan for OK
-                            'rgba(248, 113, 113, 0.8)'  // Red for Defect
-                        ],
-                        borderColor: [
-                            'rgba(34, 211, 238, 1)',
-                            'rgba(248, 113, 113, 1)'
-                        ],
+                        backgroundColor: ['rgba(34, 211, 238, 0.8)', 'rgba(248, 113, 113, 0.8)'],
+                        borderColor: ['rgba(34, 211, 238, 1)', 'rgba(248, 113, 113, 1)'],
                         borderWidth: 2,
                         hoverOffset: 4
                     }]
@@ -183,13 +247,77 @@
                     plugins: {
                         legend: {
                             position: 'bottom',
-                            labels: {
-                                color: '#94a3b8',
-                                padding: 20,
-                                font: { family: "'Courier New', Courier, monospace", size: 12, weight: 'bold' }
-                            }
+                            labels: { color: '#94a3b8', font: { family: "'Courier New', monospace", size: 10 } }
                         }
                     }
+                }
+            });
+
+            // Line Chart (Yield Monitoring)
+            const ctxYield = document.getElementById('yieldChart').getContext('2d');
+            yieldChart = new Chart(ctxYield, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                        {
+                            label: 'Total Detections',
+                            data: [],
+                            borderColor: 'rgba(56, 189, 248, 0.5)',
+                            backgroundColor: 'rgba(56, 189, 248, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.3,
+                            fill: true,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Defect Count',
+                            data: [],
+                            borderColor: 'rgba(244, 63, 94, 1)',
+                            backgroundColor: 'rgba(244, 63, 94, 0.2)',
+                            borderWidth: 2,
+                            tension: 0.3,
+                            fill: true,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    scales: {
+                        x: { grid: { color: 'rgba(15, 23, 42, 0.5)' }, ticks: { color: '#64748b', font: { size: 10 } } },
+                        y: { type: 'linear', display: true, position: 'left', grid: { color: 'rgba(30, 41, 59, 0.5)' }, ticks: { color: '#64748b' } },
+                        y1: { type: 'linear', display: true, position: 'right', grid: { drawOnChartArea: false }, ticks: { color: '#f43f5e' } }
+                    },
+                    plugins: { legend: { labels: { color: '#94a3b8', font: { size: 10 } } } }
+                }
+            });
+
+            // Bar Chart (Heatmap)
+            const ctxHeatmap = document.getElementById('heatmapChart').getContext('2d');
+            heatmapChart = new Chart(ctxHeatmap, {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Defects by Camera',
+                        data: [],
+                        backgroundColor: 'rgba(234, 179, 8, 0.8)',
+                        borderColor: 'rgba(234, 179, 8, 1)',
+                        borderWidth: 1,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { grid: { display: false }, ticks: { color: '#64748b' } },
+                        y: { grid: { color: 'rgba(30, 41, 59, 0.5)' }, ticks: { color: '#64748b' } }
+                    },
+                    plugins: { legend: { display: false } }
                 }
             });
         }
@@ -199,14 +327,13 @@
             return date.toLocaleString('en-US', { hour12: false, month: 'short', day: '2-digit', hour: "2-digit", minute: "2-digit", second: "2-digit" }).replace(',', '');
         }
 
-        async function fetchHistory() {
+        async function fetchRecentLogs() {
             try {
                 const response = await fetch('/api/history/recent');
                 const data = await response.json();
 
                 let okCount = 0;
                 let defectCount = 0;
-
                 const tbody = document.getElementById('historyTableBody');
                 tbody.innerHTML = '';
 
@@ -219,23 +346,17 @@
                     tr.className = 'hover:bg-cyan-900/10 cursor-pointer transition-colors';
 
                     const isDefect = log.defect;
-
-                    if (isDefect) {
-                        defectCount++;
-                    } else {
-                        okCount++;
-                    }
+                    if (isDefect) defectCount++; else okCount++;
 
                     const statusHtml = isDefect
                         ? '<span class="px-2 py-0.5 rounded-full text-[10px] uppercase font-bold bg-red-900/50 text-red-400 border border-red-500/30 shadow-[0_0_5px_rgba(248,113,113,0.3)]">DEFECT</span>'
                         : '<span class="px-2 py-0.5 rounded-full text-[10px] uppercase font-bold bg-cyan-900/50 text-cyan-400 border border-cyan-500/30 shadow-[0_0_5px_rgba(34,211,238,0.3)]">OK</span>';
 
                     const scoreHtml = (log.confidence * 100).toFixed(1) + '%';
-                    const timestampHtml = formatTime(log.timestamp);
 
                     tr.innerHTML = `
-                        <td class="px-4 py-3 text-slate-500">#${log.id || ''}</td>
-                        <td class="px-4 py-3 text-slate-400">${timestampHtml}</td>
+                        <td class="px-4 py-3 text-slate-500 font-mono">#${log.id || ''}</td>
+                        <td class="px-4 py-3 text-slate-400">${formatTime(log.timestamp)}</td>
                         <td class="px-4 py-3 text-cyan-200">${log.cameraId || ''}</td>
                         <td class="px-4 py-3 font-bold ${isDefect ? 'text-red-300' : 'text-slate-200'}">${log.label || 'unknown'}</td>
                         <td class="px-4 py-3 text-cyan-400">${scoreHtml}</td>
@@ -244,31 +365,61 @@
                     tbody.appendChild(tr);
                 });
 
-                // Update stats
-                const total = okCount + defectCount;
-                if (document.getElementById('totalCount')) {
-                    document.getElementById('totalCount').innerText = total;
-                }
-                if (document.getElementById('defectRate')) {
-                    document.getElementById('defectRate').innerText = total > 0 ? ((defectCount / total) * 100).toFixed(1) + '%' : '0%';
-                }
-
-                // Update chart
+                // Update Doughnut
                 if (ratioChart) {
                     ratioChart.data.datasets[0].data = [okCount, defectCount];
                     ratioChart.update();
                 }
 
-            } catch (error) {
-                console.error("Failed to fetch history:", error);
-            }
+                const total = okCount + defectCount;
+                document.getElementById('totalCount').innerText = total;
+                document.getElementById('defectRate').innerText = total > 0 ? ((defectCount / total) * 100).toFixed(1) + '%' : '0%';
+
+            } catch (error) { console.error("Failed to fetch logs:", error); }
+        }
+
+        async function fetchYieldStats() {
+            try {
+                const response = await fetch('/api/history/stats/yield');
+                const data = await response.json();
+
+                if (yieldChart && data.length > 0) {
+                    const labels = data.map(d => d.hour + 'H');
+                    const totals = data.map(d => d.total_count);
+                    const defects = data.map(d => d.defect_count);
+
+                    yieldChart.data.labels = labels;
+                    yieldChart.data.datasets[0].data = totals;
+                    yieldChart.data.datasets[1].data = defects;
+                    yieldChart.update();
+                }
+            } catch (error) { console.error("Failed to fetch yield stats:", error); }
+        }
+
+        async function fetchHeatmapStats() {
+            try {
+                const response = await fetch('/api/history/stats/heatmap');
+                const data = await response.json();
+
+                if (heatmapChart && data.length > 0) {
+                    heatmapChart.data.labels = data.map(d => d.camera_id || 'Unknown');
+                    heatmapChart.data.datasets[0].data = data.map(d => d.defect_count);
+                    heatmapChart.update();
+                }
+            } catch (error) { console.error("Failed to fetch heatmap stats:", error); }
+        }
+
+        function fetchAllData() {
+            fetchRecentLogs();
+            fetchYieldStats();
+            fetchHeatmapStats();
         }
 
         window.addEventListener('load', () => {
-            initChart();
-            fetchHistory();
-            // Automatically refresh every 5 seconds
-            setInterval(fetchHistory, 5000);
+            initCharts();
+            fetchAllData();
+            // Automatically refresh every 10 seconds
+            setInterval(fetchAllData, 10000);
         });
     </script>
 </body>
