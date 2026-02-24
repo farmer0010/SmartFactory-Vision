@@ -265,6 +265,38 @@
             joint.add(robotArm);
             robotArm.rotation.x = Math.PI / 4; // idle pose
 
+            // --- Two-Way HMI (Interactive Digital Twin) ---
+            const raycaster = new THREE.Raycaster();
+            const mouse = new THREE.Vector2();
+
+            renderer.domElement.addEventListener('pointerdown', (event) => {
+                const rect = renderer.domElement.getBoundingClientRect();
+                mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+                mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+                raycaster.setFromCamera(mouse, camera);
+                const intersects = raycaster.intersectObjects([robotArm, robotBase, column], true);
+
+                if (intersects.length > 0) {
+                    addLog("HMI", "Robot Clicked! Dispatching PLC Stop Signal...", "info");
+
+                    // Visual feedback
+                    robotArm.material.color.setHex(0xbbf7d0); // Light green flash
+                    setTimeout(() => robotArm.material.color.setHex(0xcbd5e1), 500);
+
+                    // Send PLC signal via fetch
+                    fetch('/api/system/plc/command', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ device: 'ROBOT_ARM_1', command: 'EMERGENCY_STOP', source: 'HMI_3D_VIEW' })
+                    }).then(res => {
+                        if (res.ok) addLog("PLC", "Signal Acknowledged", "success");
+                        else addLog("PLC", "Signal Rejected", "error");
+                    }).catch(e => addLog("PLC", "Network Error", "error"));
+                }
+            });
+            // ----------------------------------------------
+
             function animateRobot() {
                 requestAnimationFrame(animateRobot);
 

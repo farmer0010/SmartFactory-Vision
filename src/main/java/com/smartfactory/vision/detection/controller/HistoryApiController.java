@@ -1,5 +1,7 @@
 package com.smartfactory.vision.detection.controller;
 
+import org.springframework.http.ResponseEntity;
+
 import com.opencsv.CSVWriter;
 import com.smartfactory.vision.detection.entity.DetectionLog;
 import com.smartfactory.vision.detection.repository.DetectionLogRepository;
@@ -110,6 +112,25 @@ public class HistoryApiController {
             document.close();
         } catch (Exception e) {
             throw new RuntimeException("Error generating PDF", e);
+        }
+    }
+
+    @GetMapping(value = "/report/defect/{id}/frame", produces = "image/jpeg")
+    public ResponseEntity<byte[]> getDefectFrame(@org.springframework.web.bind.annotation.PathVariable Long id) {
+        DetectionLog log = detectionLogRepository.findById(id).orElse(null);
+        if (log == null || log.getWorkDir() == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        try {
+            java.nio.file.Path imagePath = java.nio.file.Paths.get(log.getWorkDir(), "frame.jpg");
+            if (!java.nio.file.Files.exists(imagePath)) {
+                return ResponseEntity.notFound().build();
+            }
+            byte[] imageBytes = java.nio.file.Files.readAllBytes(imagePath);
+            return ResponseEntity.ok().body(imageBytes);
+        } catch (IOException e) {
+            return ResponseEntity.internalServerError().build();
         }
     }
 }

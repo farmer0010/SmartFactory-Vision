@@ -220,6 +220,72 @@
         </div>
     </main>
 
+    <!-- Time-Machine Replay Modal -->
+    <div id="replayModal"
+        class="hidden fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-[100] flex items-center justify-center p-4 transition-opacity">
+        <div
+            class="bg-slate-800 border-2 border-cyan-500/50 rounded-xl shadow-[0_0_30px_rgba(34,211,238,0.2)] w-full max-w-4xl flex flex-col overflow-hidden relative">
+            <div class="scan-line opacity-30"></div>
+            <!-- Header -->
+            <div class="flex justify-between items-center p-4 border-b border-cyan-900/50 bg-slate-900/50">
+                <div class="flex items-center space-x-3">
+                    <svg class="w-6 h-6 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <h2 class="text-lg font-bold text-cyan-300 uppercase tracking-widest">Time-Machine <span
+                            class="text-white">Replay</span></h2>
+                </div>
+                <button onclick="closeReplay()" class="text-slate-400 hover:text-red-400 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                        </path>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Body -->
+            <div class="p-6 grid grid-cols-2 gap-6 bg-black/40">
+                <!-- Video/Image Box -->
+                <div class="flex flex-col space-y-2">
+                    <div class="text-[10px] text-cyan-500 uppercase font-bold tracking-wider">Recorded Frame</div>
+                    <div
+                        class="relative bg-black rounded-lg border border-slate-700 aspect-video flex items-center justify-center overflow-hidden">
+                        <img id="replayImage" class="w-full h-full object-contain hidden" alt="Replay Frame" />
+                        <div id="replayLoading" class="text-cyan-700 animate-pulse text-xs">Loading footage...</div>
+                    </div>
+                </div>
+
+                <!-- Info Box -->
+                <div class="flex flex-col space-y-4">
+                    <div class="text-[10px] text-cyan-500 uppercase font-bold tracking-wider">Incident Details</div>
+                    <div class="bg-slate-900/50 rounded-lg border border-slate-700 p-4 text-sm font-mono space-y-4">
+                        <div class="flex justify-between border-b border-slate-700/50 pb-2">
+                            <span class="text-slate-500">Log ID</span>
+                            <span id="replayId" class="text-white font-bold">#----</span>
+                        </div>
+                        <div class="flex justify-between border-b border-slate-700/50 pb-2">
+                            <span class="text-slate-500">Timestamp</span>
+                            <span id="replayTime" class="text-cyan-300">--:--:--</span>
+                        </div>
+                        <div class="flex justify-between border-b border-slate-700/50 pb-2">
+                            <span class="text-slate-500">Camera</span>
+                            <span id="replayCam" class="text-slate-300">CAM-XX</span>
+                        </div>
+                        <div class="flex justify-between border-b border-slate-700/50 pb-2">
+                            <span class="text-slate-500">Detection</span>
+                            <span id="replayLabel" class="text-red-400 font-bold uppercase">NG</span>
+                        </div>
+                        <div class="flex justify-between border-b border-slate-700/50 pb-2">
+                            <span class="text-slate-500">Confidence</span>
+                            <span id="replayConf" class="text-white">--%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         let ratioChart = null;
         let yieldChart = null;
@@ -344,6 +410,7 @@
                 data.forEach(log => {
                     const tr = document.createElement('tr');
                     tr.className = 'hover:bg-cyan-900/10 cursor-pointer transition-colors';
+                    tr.onclick = () => openReplay(log); // LINK TO TIME-MACHINE MODAL
 
                     const isDefect = log.defect;
                     if (isDefect) defectCount++; else okCount++;
@@ -377,6 +444,52 @@
 
             } catch (error) { console.error("Failed to fetch logs:", error); }
         }
+
+        // --- Time-Machine Replay Logic ---
+        function openReplay(log) {
+            document.getElementById('replayModal').classList.remove('hidden');
+
+            // Populate Modal Fields
+            document.getElementById('replayId').innerText = `#${log.id}`;
+            document.getElementById('replayTime').innerText = formatTime(log.timestamp);
+            document.getElementById('replayCam').innerText = log.cameraId || 'Unknown';
+            document.getElementById('replayLabel').innerText = (log.label || 'Unknown').toUpperCase();
+            document.getElementById('replayConf').innerText = (log.confidence * 100).toFixed(1) + '%';
+
+            const isDefect = log.defect;
+            const labelEl = document.getElementById('replayLabel');
+            labelEl.className = isDefect ? "text-red-400 font-bold uppercase" : "text-cyan-400 font-bold uppercase";
+
+            const imgEl = document.getElementById('replayImage');
+            const loadingEl = document.getElementById('replayLoading');
+
+            imgEl.classList.add('hidden');
+            loadingEl.classList.remove('hidden');
+
+            // Fetch Frame Image from new API endpoint
+            fetch(`/api/history/report/defect/${log.id}/frame`)
+                .then(res => {
+                    if (!res.ok) throw new Error("Frame not found");
+                    return res.blob();
+                })
+                .then(blob => {
+                    imgEl.src = URL.createObjectURL(blob);
+                    imgEl.classList.remove('hidden');
+                    loadingEl.classList.add('hidden');
+                })
+                .catch(e => {
+                    loadingEl.innerText = "No recorded footage available.";
+                    loadingEl.classList.remove('animate-pulse');
+                    loadingEl.classList.add('text-red-500');
+                });
+        }
+
+        function closeReplay() {
+            document.getElementById('replayModal').classList.add('hidden');
+            const imgEl = document.getElementById('replayImage');
+            imgEl.src = ""; // Free memory
+        }
+        // ---------------------------------
 
         async function fetchYieldStats() {
             try {
