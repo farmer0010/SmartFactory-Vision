@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: smartfactory_app
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:mariadb://db:3306/smartfactory
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=smartfactory_pass
+      - APP_AI_WORK_DIR=/app/jpyrust
+      - APP_AI_MODEL_PATH=/app/yolov8n.pt
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: mariadb:10.6
+    container_name: smartfactory_db
+    environment:
+      - MYSQL_ROOT_PASSWORD=smartfactory_pass
+      - MYSQL_DATABASE=smartfactory
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mdslave:
+    image: python:3.11-slim
+    container_name: smartfactory_mdslave
+    command: >
+      bash -c "pip install pyModbusTCP && python -c '
+      from pyModbusTCP.server import ModbusServer
+      server = ModbusServer(host=\"0.0.0.0\", port=502, no_block=True)
+      try:
+          print(\"Modbus Slave Server 동작 중... (Port: 502)\")
+          server.start()
+          while True:
+              pass
+      except KeyboardInterrupt:
+          server.stop()
+      '"
+    ports:
+      - "502:502"
+
+volumes:
+  db_data:
