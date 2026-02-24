@@ -93,9 +93,9 @@
     </header>
 
     <!-- Main Content -->
-    <main class="flex-1 grid grid-cols-12 gap-4 p-4 min-h-0 overflow-y-auto">
+    <main class="flex-1 flex flex-col gap-4 p-4 min-h-0 overflow-y-auto">
         <!-- Top Analytics Row -->
-        <div class="col-span-12 grid grid-cols-3 gap-4 h-64">
+        <div class="grid grid-cols-3 gap-4 h-64 shrink-0">
 
             <!-- Ratio Doughnut -->
             <div
@@ -106,7 +106,7 @@
                 <div class="flex-1 relative w-full flex items-center justify-center">
                     <canvas id="ratioChart"></canvas>
                 </div>
-                <div class="mt-2 flex justify-around text-xs border-t border-cyan-900/30 pt-2">
+                <div class="mt-2 flex justify-around text-xs border-t border-cyan-900/30 pt-2 shrink-0">
                     <div class="text-center">
                         <div class="text-slate-400 mb-1">Total Logs</div>
                         <div id="totalCount"
@@ -124,9 +124,9 @@
             <div
                 class="bg-slate-800 p-4 rounded-lg border border-cyan-900/50 shadow-[0_0_15px_rgba(0,0,0,0.5)] flex flex-col">
                 <h3
-                    class="text-xs font-bold uppercase border-b border-cyan-900/30 pb-2 mb-2 text-slate-300 tracking-wider">
+                    class="text-xs font-bold uppercase border-b border-cyan-900/30 pb-2 mb-2 text-slate-300 tracking-wider shrink-0">
                     Yield Monitoring (24h)</h3>
-                <div class="flex-1 relative w-full h-full flex items-center justify-center pt-2">
+                <div class="flex-1 relative w-full h-full flex items-center justify-center pt-2 min-h-0">
                     <canvas id="yieldChart"></canvas>
                 </div>
             </div>
@@ -135,9 +135,9 @@
             <div
                 class="bg-slate-800 p-4 rounded-lg border border-cyan-900/50 shadow-[0_0_15px_rgba(0,0,0,0.5)] flex flex-col">
                 <h3
-                    class="text-xs font-bold uppercase border-b border-cyan-900/30 pb-2 mb-2 text-slate-300 tracking-wider">
+                    class="text-xs font-bold uppercase border-b border-cyan-900/30 pb-2 mb-2 text-slate-300 tracking-wider shrink-0">
                     Defect Heatmap (Camera)</h3>
-                <div class="flex-1 relative w-full h-full flex items-center justify-center pt-2">
+                <div class="flex-1 relative w-full h-full flex items-center justify-center pt-2 min-h-0">
                     <canvas id="heatmapChart"></canvas>
                 </div>
             </div>
@@ -145,7 +145,7 @@
         </div>
 
         <!-- Bottom Row (Table + Reports) -->
-        <div class="col-span-12 grid grid-cols-12 gap-4 flex-1">
+        <div class="grid grid-cols-12 gap-4 flex-1 min-h-[400px]">
 
             <!-- Table Area -->
             <div
