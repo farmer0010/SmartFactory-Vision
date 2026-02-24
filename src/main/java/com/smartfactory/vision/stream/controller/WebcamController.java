@@ -28,8 +28,9 @@ public class WebcamController {
         byte[] bytes = file.getBytes();
         log.info("[WebcamController] Received frame for {} ({} bytes)", camId, bytes.length);
 
-        jPyRustService.detectAsync(camId, bytes).thenAccept(result -> {
+            jPyRustService.detectAsync(camId, bytes).thenAccept(result -> {
             log.info("[WebcamController] Detection result for {}: {}", camId, result.substring(0, Math.min(100, result.length())));
+            // index.html expects /topic/detections/camId
             messagingTemplate.convertAndSend("/topic/detections/" + camId, result);
         });
     }

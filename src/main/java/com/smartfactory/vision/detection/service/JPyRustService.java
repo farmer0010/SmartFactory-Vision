@@ -81,6 +81,11 @@ public class JPyRustService {
                 }
 
                 String result = new String(resultBytes, StandardCharsets.UTF_8);
+                
+                // Wrap raw array from Python into `{"detections": [...]}` if it's just an array
+                if (result.trim().startsWith("[")) {
+                     result = "{\"detections\":" + result + "}";
+                }
 
                 detectionHistoryService.saveLogAsync(cameraId, result);
 
