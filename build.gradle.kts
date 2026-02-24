@@ -22,15 +22,16 @@ repositories {
 
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
-    implementation("org.springframework.boot:spring-boot-starter-websocket")
     implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
-
+    implementation("org.springframework.boot:spring-boot-starter-websocket")
+    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+    implementation("org.mariadb.jdbc:mariadb-java-client")
+    runtimeOnly("com.h2database:h2")
+    implementation("com.ghgande:j2mod:3.2.0")
     compileOnly("org.projectlombok:lombok")
     annotationProcessor("org.projectlombok:lombok")
-
     implementation("com.github.farmer0010:JPyRust:v1.3.1")
-    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-    runtimeOnly("com.h2database:h2")
+    implementation("me.paulschwarz:spring-dotenv:4.0.0")
 }
 
 tasks.withType<Test> {
