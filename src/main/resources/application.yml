@@ -1,5 +1,5 @@
 server:
-  port: ${PORT:8080}
+  port: ${PORT:9090}
   error:
     include-message: always
     include-exception: true
@@ -26,6 +26,12 @@ app:
   ai:
     work-dir: ${APP_AI_WORK_DIR}
     model-path: ${APP_AI_MODEL_PATH}
+  opcua:
+    endpoint-url: ${APP_OPCUA_ENDPOINT:opc.tcp://localhost:4840}
+    nodes:
+      estop: "ns=2;s=Machine.EStop"
+      status: "ns=2;s=Machine.Status"
+      reject-kicker: "ns=2;s=Machine.RejectKicker"
 
 logging:
   file:

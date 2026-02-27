@@ -25,6 +25,12 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
     implementation("org.springframework.boot:spring-boot-starter-websocket")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+    implementation("org.springframework.boot:spring-boot-starter-validation")
+
+    // Spring Security
+    implementation("org.springframework.boot:spring-boot-starter-security")
+    implementation("org.thymeleaf.extras:thymeleaf-extras-springsecurity6")
+
     implementation("org.mariadb.jdbc:mariadb-java-client")
     runtimeOnly("com.h2database:h2")
     implementation("com.ghgande:j2mod:3.2.0")
@@ -36,6 +42,10 @@ dependencies {
     // For Excel/CSV and PDF generation
     implementation("com.opencsv:opencsv:5.7.1")
     implementation("com.itextpdf:itextpdf:5.5.13.3")
+
+    // OPC UA Client (Eclipse Milo)
+    implementation("org.eclipse.milo:sdk-client:0.6.16")
+    implementation("org.eclipse.milo:bsd-parser-gson:0.6.16")
 }
 
 tasks.withType<Test> {

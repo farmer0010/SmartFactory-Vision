@@ -1,5 +1,6 @@
-# 🏭 SmartFactory-Vision Ver 1.3.0
+# 🏭 SmartFactory-Vision Ver 1.4.0
 
+![Dashboard AI Copilot](file:///C:/Users/%EA%B9%80%EC%A3%BC%EC%98%81/.gemini/antigravity/brain/23b4502f-b271-4078-b8a2-0dadbdb60b07/dashboard_with_copilot_1772154454731_1772181232622.png)
 > **"실시간 AI 기반 공장 검사 시스템: JPyRust를 이용한 멀티 스트림 아키텍처"**<br>
 > 사용자의 웹캠 피드, 초고속 AI 추론(JPyRust), 실시간 모니터링(3D 디지털 트윈), 그리고 **시스템의 실물 제어망(Soft-PLC)**을 모두 갖춘 지능형 스마트 팩토리 플랫폼입니다.
 
@@ -40,7 +41,7 @@ graph TD
     %% 백엔드 영역
     subgraph Backend_System ["Backend System"]
         SpringBoot -->|"Queue Tasks"| Pool["🧠 JPyRust Pool<br>AI Service Manager"]
-        Pool -.->|"Push Results"| WS["WebSocket Broker<br>Topic: /detections"]
+        Pool -.->|"Push Results"| WS["WebSocket Broker<br>Topic: /detections, /alerts"]
         WS -->|"STOMP"| Client
         SpringBoot -->|"Defect Trigger"| PLC_Service["⚙️ PlcControlService<br>Modbus/TCP"]
     end
@@ -51,12 +52,18 @@ graph TD
         Bridge -->|"Shared Memory"| SHM["RAM: Shared Memory"]
         SHM -->|"IPC Memory Read"| PythonDaemon["Python Daemon<br>YOLOv8 Engine"]
         PythonDaemon -->|"JSON Output"| Pool
+        
+        %% AI Copilot Layer
+        Pool -->|"Invoke COPILOT"| CopilotTask["🤖 AI Copilot Task"]
+        CopilotTask -->|"HTTP API Call"| Gemini["✨ Google Gemini API<br>Tool Calling Agent"]
+        Gemini -->|"FAISS Vector"| ManualStore[("📘 Factory Manual<br>FAISS DB")]
+        Gemini -->|"GET /api/*"| SpringBoot
     end
 
     %% 데이터 및 설비 영역
     subgraph Factory_Storage ["Factory Floor & Storage"]
         PLC_Service -->|"Write Coil Port 502"| Slave["🏭 PLC Slave mdslave"]
-        Pool -->|"Async Save"| DB[("🐬 MariaDB<br>History Storage")]
+        Pool -->|"Async Save"| DB[("🐬 MariaDB<br>History, Users, Audit Logs")]
     end
 ```
 
@@ -156,6 +163,7 @@ erDiagram
     %% 관계성 정의
     CAMERA ||--o{ DETECTION_LOG : "감지 로그 생성"
     CAMERA ||--o{ DEFECT_HISTORY : "결함 이벤트 기록"
+    APP_USER ||--o{ AUDIT_LOG : "감사 로그 발생"
 
     %% 엔티티
     CAMERA {
@@ -178,6 +186,19 @@ erDiagram
         LocalDateTime timestamp "결함 발견 시각"
         String defectType "불량 판정 종류 (defect, ng 등)"
         Double confidence "불량 판정에 대한 신뢰도"
+    }
+    
+    APP_USER {
+        Long id PK
+        String username
+        String role "ADMIN, USER"
+    }
+    
+    AUDIT_LOG {
+        Long id PK
+        String username FK
+        String eventType "LOGIN, SYSTEM, DB_RESET"
+        String message "로그 내용"
     }
 ```
 
@@ -205,6 +226,16 @@ erDiagram
 ### 6. 🖥️ 하드코어 Sci-Fi 대시보드 및 가상 테스트 모드
 * **2x2 그리드 UI:** 네온 그린과 다크 테마 기반의 반응형 그리드 화면으로 여러 채널을 끊김 없이 송출합니다.
 * **"Simulate Defect" 모드:** 실물 설비의 훅업 상태를 실제 불량품을 흘리지 않고도 버튼 하나로 통합 테스트할 수 있는 내장 가상 트리거를 지원합니다.
+
+### 7. 🤖 생성형 AI Copilot (Gemini Native Tool Calling)
+* **지능형 비서:** 대시보드 하단의 챗봇 위젯을 통해 구글 Gemini 2.5 Flash를 대화형으로 호출합니다.
+* **다이나믹 도구 연동 (RAG+DB):** AI가 스스로 질문을 분석하여, REST API에 접속해 금일 불량 통계를 조회하거나, FAISS 벡터 데이터베이스에 저장된 공장 매뉴얼 가이드(`factory_manual.txt`)를 읽어 E-Stop 해제 및 404 에러 대응법을 사용자에게 브리핑합니다.
+
+![Admin Audit Logs](file:///C:/Users/%EA%B9%80%EC%A3%BC%EC%98%81/.gemini/antigravity/brain/23b4502f-b271-4078-b8a2-0dadbdb60b07/admin_audit_logs_1772181262861.png)
+
+### 8. 🚨 실시간 보안 감사 및 웹소켓 알림 시스템
+* **스프링 감사 로그 (Audit Tracing):** 관리자의 로그인, 시스템 초기화 내역을 감지하여 DB Entity에 영구 저장 및 패널에 출력합니다.
+* **스케줄러 기반 위험 경보:** 매 1분마다 지난 5분간의 전사적 불량률을 모니터링하며, 임계치(20%)를 초과할 경우 접속 중인 모든 사용자에게 붉은 알림 배너를 강제 푸시(`/topic/alerts`)하여 공장 라인 중단 점검을 강제시킵니다.
 
 <br>
 
@@ -280,6 +311,7 @@ gradlew.bat bootRun
 
 | 버전 | 날짜 | 주요 변경 사항 |
 |---------|------|---------|
+| **v1.4.0** | 2026-02 | **Phase 6/7 Enhancement:** Gemini AI Copilot 도입, 관리자 감사 로그 통합, 실시간 WebSocket 경보 배너 등 풀스택 대규모 확장 적용 |
 | **v1.3.0** | 2026-02 | **Phase 3/4/5:** Soft-PLC(Modbus) 제어 연동, 3D 디지털 트윈, MariaDB 저장 레이어 추가 |
 | **v1.2.1** | 2026-02 | **Maintenance:** 코드 최적화 및 문서 컨벤션(42Cabi Style) 적용 |
 | **v1.2.0** | 2026-02 | **Phase 2:** 멀티 스트림(2x2 그리드), JPyRust 워커 풀 비동기 인프라 고도화 |
@@ -292,8 +324,8 @@ gradlew.bat bootRun
 - [x] Multi-camera 지원 고밀도 인프라 완성 (Phase 2)
 - [x] Soft-PLC 실시간 물리 설비 제어망 통합 (Phase 3)
 - [x] WebGL 3D 기반 디지털 트윈 모니터링 구현 (Phase 4)
-- [x] 감지 이력 및 이벤트 백업 데이터베이스(DB) 보관 파이프라인 (Phase 5 진행)
-- [ ] AI 감지 이력 빅데이터 통계 및 분석 대시보드 뷰 구현
+- [x] 감지 이력 및 이벤트 백업 데이터베이스(DB) 보관 파이프라인 (Phase 5)
+- [x] Gemini AI Copilot 통합 및 웹소켓 알림 시스템 구축 (Phase 6/7)
 - [ ] Dockerized 완전 독립 배포 지원 및 CI/CD 구축
 
 <br>

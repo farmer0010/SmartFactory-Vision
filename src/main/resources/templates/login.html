@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartFactory Vision — 로그인</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', 'Apple SD Gothic Neo', '맑은 고딕', sans-serif;
+            background-color: #F0F4F8;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* ---- 배경 패턴 ---- */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(to right, #e2e8f0 1px, transparent 1px),
+                linear-gradient(to bottom, #e2e8f0 1px, transparent 1px);
+            background-size: 40px 40px;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .page-wrapper {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 28px;
+            width: 100%;
+            padding: 24px;
+        }
+
+        /* ---- 회사 로고 영역 ---- */
+        .brand-area {
+            text-align: center;
+        }
+
+        .brand-logo {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+
+        .brand-icon {
+            width: 40px;
+            height: 40px;
+            background: #1A56DB;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .brand-icon svg {
+            width: 24px;
+            height: 24px;
+            color: white;
+            stroke: white;
+        }
+
+        .brand-name {
+            font-size: 22px;
+            font-weight: 800;
+            color: #1E293B;
+            letter-spacing: -0.5px;
+        }
+
+        .brand-name span {
+            color: #1A56DB;
+        }
+
+        .brand-sub {
+            font-size: 12px;
+            color: #64748B;
+            font-weight: 500;
+            margin-top: 4px;
+            letter-spacing: 0.5px;
+        }
+
+        /* ---- 로그인 카드 ---- */
+        .login-card {
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow:
+                0 1px 3px rgba(0, 0, 0, 0.04),
+                0 10px 40px rgba(0, 0, 0, 0.08),
+                0 0 0 1px rgba(0, 0, 0, 0.04);
+            width: 100%;
+            max-width: 420px;
+            padding: 40px;
+        }
+
+        .card-header {
+            margin-bottom: 28px;
+        }
+
+        .card-header h1 {
+            font-size: 22px;
+            font-weight: 700;
+            color: #1E293B;
+            letter-spacing: -0.5px;
+        }
+
+        .card-header p {
+            font-size: 14px;
+            color: #64748B;
+            margin-top: 6px;
+        }
+
+        /* ---- 에러 / 성공 알림 ---- */
+        .alert {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 12px 14px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .alert-error {
+            background: #FEF2F2;
+            border: 1px solid #FECACA;
+            color: #B91C1C;
+        }
+
+        .alert-success {
+            background: #F0FFF4;
+            border: 1px solid #BBF7D0;
+            color: #166534;
+        }
+
+        .alert-icon {
+            flex-shrink: 0;
+            width: 16px;
+            height: 16px;
+            margin-top: 1px;
+        }
+
+        /* ---- 폼 요소 ---- */
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 7px;
+        }
+
+        .form-input-wrap {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .form-input-icon {
+            position: absolute;
+            left: 13px;
+            width: 17px;
+            height: 17px;
+            stroke: #94A3B8;
+            pointer-events: none;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 11px 14px 11px 40px;
+            border: 1.5px solid #E2E8F0;
+            border-radius: 9px;
+            font-size: 14px;
+            font-family: inherit;
+            color: #1E293B;
+            background: #F8FAFC;
+            transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+            outline: none;
+        }
+
+        .form-control::placeholder {
+            color: #CBD5E1;
+        }
+
+        .form-control:focus {
+            border-color: #1A56DB;
+            background: #ffffff;
+            box-shadow: 0 0 0 3px rgba(26, 86, 219, 0.12);
+        }
+
+        /* ---- 로그인 버튼 ---- */
+        .btn-login {
+            width: 100%;
+            padding: 12px;
+            background: #1A56DB;
+            color: #ffffff;
+            border: none;
+            border-radius: 9px;
+            font-size: 14px;
+            font-weight: 700;
+            font-family: inherit;
+            cursor: pointer;
+            letter-spacing: 0.2px;
+            transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .btn-login:hover {
+            background: #1648C0;
+            box-shadow: 0 4px 14px rgba(26, 86, 219, 0.35);
+        }
+
+        .btn-login:active {
+            transform: translateY(1px);
+        }
+
+        /* ---- 기본 계정 안내 (개발용) ---- */
+        .dev-hint {
+            margin-top: 24px;
+            padding: 14px;
+            background: #F8FAFC;
+            border: 1px dashed #CBD5E1;
+            border-radius: 8px;
+        }
+
+        .dev-hint-title {
+            font-size: 11px;
+            font-weight: 700;
+            color: #94A3B8;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 8px;
+        }
+
+        .dev-hint-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 0;
+        }
+
+        .dev-hint-row:not(:last-child) {
+            border-bottom: 1px solid #E2E8F0;
+        }
+
+        .dev-role {
+            font-size: 12px;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 20px;
+        }
+
+        .dev-role.admin {
+            background: #EFF6FF;
+            color: #1A56DB;
+        }
+
+        .dev-role.worker {
+            background: #F0FDF4;
+            color: #166534;
+        }
+
+        .dev-cred {
+            font-size: 12px;
+            font-family: 'Courier New', monospace;
+            color: #475569;
+        }
+
+        /* ---- 하단 푸터 ---- */
+        .page-footer {
+            font-size: 12px;
+            color: #94A3B8;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page-wrapper">
+        
+        <div class="brand-area">
+            <a href="#" class="brand-logo">
+                <div class="brand-icon">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18" />
+                    </svg>
+                </div>
+                <span class="brand-name">SmartFactory<span>Vision</span></span>
+            </a>
+            <p class="brand-sub">AI-Powered Quality Control System</p>
+        </div>
+
+        
+        <div class="login-card">
+            <div class="card-header">
+                <h1>시스템 로그인</h1>
+                <p>계속하려면 계정 정보를 입력해 주세요.</p>
+            </div>
+
+            
+            <div th:if="${param.error}" class="alert alert-error">
+                <svg class="alert-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+                <span>아이디 또는 비밀번호가 올바르지 않습니다. 다시 확인해 주세요.</span>
+            </div>
+
+            
+            <div th:if="${param.logout}" class="alert alert-success">
+                <svg class="alert-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+                <span>성공적으로 로그아웃되었습니다.</span>
+            </div>
+
+            
+            <form th:action="@{/login}" method="post">
+                
+
+                <div class="form-group">
+                    <label for="username" class="form-label">아이디 (ID)</label>
+                    <div class="form-input-wrap">
+                        <svg class="form-input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                            stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                        <input type="text" id="username" name="username" class="form-control" placeholder="아이디를 입력하세요"
+                            autocomplete="username" required autofocus>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="password" class="form-label">비밀번호</label>
+                    <div class="form-input-wrap">
+                        <svg class="form-input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                            stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                        </svg>
+                        <input type="password" id="password" name="password" class="form-control"
+                            placeholder="비밀번호를 입력하세요" autocomplete="current-password" required>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-login">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                        stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                    </svg>
+                    로그인
+                </button>
+            </form>
+
+            
+            <div class="dev-hint">
+                <div class="dev-hint-title">🔑 기본 계정 안내 (개발용)</div>
+                <div class="dev-hint-row">
+                    <span class="dev-role admin">ADMIN</span>
+                    <span class="dev-cred">admin / admin123</span>
+                </div>
+                <div class="dev-hint-row">
+                    <span class="dev-role worker">WORKER</span>
+                    <span class="dev-cred">worker1 / worker123</span>
+                </div>
+            </div>
+        </div>
+
+        
+        <footer class="page-footer">
+            &copy; 2026 SmartFactory Vision. All rights reserved.
+        </footer>
+    </div>
+</body>
+
+</html>

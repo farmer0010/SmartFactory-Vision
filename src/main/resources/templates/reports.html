@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartFactory Vision — 리포트</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Apple SD Gothic Neo', sans-serif;
+        }
+
+        .sidebar {
+            width: 220px;
+            flex-shrink: 0;
+        }
+
+        .nav-link {
+            transition: all 0.15s ease;
+        }
+
+        .nav-link.active {
+            background: #EFF6FF;
+            color: #1A56DB;
+            border-left: 3px solid #1A56DB;
+        }
+
+        .nav-link:not(.active):hover {
+            background: #F8FAFC;
+            color: #1A56DB;
+        }
+
+        ::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+
+        .download-card {
+            transition: all 0.2s;
+        }
+
+        .download-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(26, 86, 219, 0.12);
+        }
+    </style>
+</head>
+
+<body class="bg-slate-100 text-slate-800 h-screen overflow-hidden flex">
+
+    
+    <aside class="sidebar bg-white border-r border-slate-200 flex flex-col h-screen overflow-hidden shadow-sm">
+        <div class="px-5 py-5 border-b border-slate-100">
+            <a href="/" class="flex items-center space-x-2.5 no-underline">
+                <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0 shadow">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                        stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                </div>
+                <div>
+                    <div class="text-sm font-bold text-slate-800 leading-tight">SmartFactory</div>
+                    <div class="text-[10px] font-semibold text-blue-600 uppercase tracking-wider leading-tight">Vision
+                    </div>
+                </div>
+            </a>
+        </div>
+        <nav class="flex-1 py-4 px-3 space-y-0.5 overflow-y-auto">
+            <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest px-3 pb-1.5 pt-1">모니터링</p>
+            <a href="/"
+                class="nav-link flex items-center space-x-2.5 px-3 py-2 rounded-lg text-sm font-medium no-underline text-slate-600">
+                <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                    stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                <span>실시간 대시보드</span>
+            </a>
+            <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest px-3 pb-1.5 pt-3">기록 / 분석</p>
+            <a href="/history"
+                class="nav-link flex items-center space-x-2.5 px-3 py-2 rounded-lg text-sm font-medium no-underline text-slate-600">
+                <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                    stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+                <span>검출 이력</span>
+            </a>
+            <a href="/history/analytics"
+                class="nav-link flex items-center space-x-2.5 px-3 py-2 rounded-lg text-sm font-medium no-underline text-slate-600">
+                <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                    stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+                <span>통계 분석</span>
+            </a>
+            <a href="/history/reports"
+                class="nav-link active flex items-center space-x-2.5 px-3 py-2 rounded-lg text-sm font-medium no-underline text-blue-700">
+                <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                    stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <span>리포트</span>
+            </a>
+            <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest px-3 pb-1.5 pt-3">시스템 관리</p>
+            <a href="/admin"
+                class="nav-link flex items-center space-x-2.5 px-3 py-2 rounded-lg text-sm font-medium no-underline text-slate-600">
+                <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                    stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                </svg>
+                <span>관리자 패널</span>
+            </a>
+        </nav>
+        <div class="px-4 py-4 border-t border-slate-100 flex-shrink-0">
+            <div class="flex items-center space-x-2.5">
+                <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                    <span class="text-blue-700 font-bold text-xs"
+                        th:text="${displayName != null ? displayName.substring(0,1) : 'U'}">A</span>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-xs font-semibold text-slate-700 truncate"
+                        th:text="${displayName != null ? displayName : 'User'}">관리자</p>
+                    <p class="text-[10px] text-slate-400 font-medium"
+                        th:text="${userRole != null ? userRole : 'WORKER'}">ADMIN</p>
+                </div>
+                <a href="/logout" onclick="return confirm('로그아웃 하시겠습니까?')"
+                    class="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                </a>
+            </div>
+        </div>
+    </aside>
+
+    
+    <div class="flex-1 flex flex-col h-screen min-w-0 overflow-hidden">
+
+        <header
+            class="bg-white border-b border-slate-200 px-6 py-3 flex items-center justify-between flex-shrink-0 shadow-sm">
+            <div>
+                <h1 class="text-sm font-bold text-slate-800">리포트 생성</h1>
+                <p class="text-[11px] text-slate-400 mt-0.5">QA 검사 보고서 자동 생성 · CSV 및 PDF 다운로드</p>
+            </div>
+        </header>
+
+        <main class="flex-1 overflow-y-auto p-6 min-h-0">
+            <div class="max-w-3xl mx-auto">
+
+                
+                <div class="bg-blue-50 border border-blue-200 rounded-xl p-5 mb-6">
+                    <div class="flex items-start space-x-3">
+                        <div
+                            class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-bold text-blue-900 mb-1">자동 리포트 시스템</h3>
+                            <p class="text-xs text-blue-700 leading-relaxed">
+                                현재 데이터베이스에 저장된 전체 AI 비전 검사 이력을 기반으로 QA 리포트를 즉시 생성합니다.
+                                CSV 파일은 Excel 분석에, PDF는 경영진 보고에 최적화되어 있습니다.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                
+                <div class="grid grid-cols-3 gap-4 mb-6" id="statsPreview">
+                    <div class="bg-white rounded-xl border border-slate-200 p-4 text-center">
+                        <p class="text-2xl font-bold text-blue-600" id="previewTotal">—</p>
+                        <p class="text-[11px] text-slate-400 mt-1 font-medium">총 이력 건수</p>
+                    </div>
+                    <div class="bg-white rounded-xl border border-slate-200 p-4 text-center">
+                        <p class="text-2xl font-bold text-red-500" id="previewDefects">—</p>
+                        <p class="text-[11px] text-slate-400 mt-1 font-medium">불량 건수</p>
+                    </div>
+                    <div class="bg-white rounded-xl border border-slate-200 p-4 text-center">
+                        <p class="text-2xl font-bold text-emerald-500" id="previewYield">—%</p>
+                        <p class="text-[11px] text-slate-400 mt-1 font-medium">정상 수율</p>
+                    </div>
+                </div>
+
+                
+                <div class="grid grid-cols-2 gap-5 mb-8">
+
+                    
+                    <a href="/api/history/report/csv"
+                        class="download-card block bg-white rounded-2xl border border-slate-200 shadow-sm p-6 text-center no-underline group">
+                        <div
+                            class="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:bg-emerald-100 transition-colors">
+                            <svg class="w-8 h-8 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                stroke-width="1.5">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                        </div>
+                        <h3 class="text-base font-bold text-slate-800 mb-1">CSV 다운로드</h3>
+                        <p class="text-xs text-slate-500 mb-4">원시 데이터셋 · Excel 분석용</p>
+                        <div
+                            class="bg-emerald-500 text-white text-xs font-bold px-4 py-2 rounded-lg inline-block group-hover:bg-emerald-600 transition-colors">
+                            ↓ CSV 내보내기
+                        </div>
+                    </a>
+
+                    
+                    <a href="/api/history/report/pdf"
+                        class="download-card block bg-white rounded-2xl border border-slate-200 shadow-sm p-6 text-center no-underline group">
+                        <div
+                            class="w-14 h-14 bg-red-50 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:bg-red-100 transition-colors">
+                            <svg class="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                stroke-width="1.5">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                            </svg>
+                        </div>
+                        <h3 class="text-base font-bold text-slate-800 mb-1">PDF 리포트</h3>
+                        <p class="text-xs text-slate-500 mb-4">포맷된 PDF · 경영진 보고용</p>
+                        <div
+                            class="bg-red-500 text-white text-xs font-bold px-4 py-2 rounded-lg inline-block group-hover:bg-red-600 transition-colors">
+                            ↓ PDF 내보내기
+                        </div>
+                    </a>
+                </div>
+
+                
+                <div class="bg-white rounded-xl border border-slate-200 p-5">
+                    <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-4">리포트 항목</h3>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="flex items-center space-x-2.5 text-xs text-slate-600">
+                            <div class="w-4 h-4 bg-blue-100 rounded flex items-center justify-center flex-shrink-0">
+                                <span class="text-blue-600 text-[9px] font-bold">✓</span>
+                            </div>
+                            <span>검출 일시 및 카메라 ID</span>
+                        </div>
+                        <div class="flex items-center space-x-2.5 text-xs text-slate-600">
+                            <div class="w-4 h-4 bg-blue-100 rounded flex items-center justify-center flex-shrink-0">
+                                <span class="text-blue-600 text-[9px] font-bold">✓</span>
+                            </div>
+                            <span>AI 검출 레이블 및 신뢰도</span>
+                        </div>
+                        <div class="flex items-center space-x-2.5 text-xs text-slate-600">
+                            <div class="w-4 h-4 bg-blue-100 rounded flex items-center justify-center flex-shrink-0">
+                                <span class="text-blue-600 text-[9px] font-bold">✓</span>
+                            </div>
+                            <span>정상 / 불량 판정 상태</span>
+                        </div>
+                        <div class="flex items-center space-x-2.5 text-xs text-slate-600">
+                            <div class="w-4 h-4 bg-blue-100 rounded flex items-center justify-center flex-shrink-0">
+                                <span class="text-blue-600 text-[9px] font-bold">✓</span>
+                            </div>
+                            <span>전체 불량률 통계 요약</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        async function loadStats() {
+            try {
+                const res = await fetch('/api/history/recent?limit=9999');
+                if (!res.ok) return;
+                const data = await res.json();
+                const total = data.length;
+                const defects = data.filter(r => r.status === 'DEFECT' || (r.label || '').toLowerCase().includes('defect') || (r.label || '').toLowerCase().includes('ng')).length;
+                const yieldPct = total > 0 ? (((total - defects) / total) * 100).toFixed(1) : '100.0';
+                document.getElementById('previewTotal').textContent = total.toLocaleString();
+                document.getElementById('previewDefects').textContent = defects.toLocaleString();
+                document.getElementById('previewYield').textContent = yieldPct + '%';
+            } catch (e) { }
+        }
+        window.addEventListener('load', loadStats);
+    </script>
+</body>
+
+</html>

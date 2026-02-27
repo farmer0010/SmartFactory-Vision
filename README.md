@@ -1,5 +1,6 @@
-# 🏭 SmartFactory-Vision Ver 1.3.0
+# 🏭 SmartFactory-Vision Ver 1.4.0
 
+![Dashboard AI Copilot](file:///C:/Users/%EA%B9%80%EC%A3%BC%EC%98%81/.gemini/antigravity/brain/23b4502f-b271-4078-b8a2-0dadbdb60b07/dashboard_with_copilot_1772154454731_1772181232622.png)
 > **"Real-Time AI-Powered Factory Inspection System: Multi-Stream Architecture via JPyRust"**<br>
 > An intelligent smart factory platform fully equipped with live webcam feeds, ultra-high-speed AI inference (JPyRust), real-time monitoring (3D Digital Twin), and **integration with physical machinery control networks (Soft-PLC)**.
 
@@ -40,7 +41,7 @@ graph TD
     %% Backend Area
     subgraph Backend_System ["Backend System"]
         SpringBoot -->|"Queue Tasks"| Pool["🧠 JPyRust Pool<br>AI Service Manager"]
-        Pool -.->|"Push Results"| WS["WebSocket Broker<br>Topic: /detections"]
+        Pool -.->|"Push Results"| WS["WebSocket Broker<br>Topic: /detections, /alerts"]
         WS -->|"STOMP"| Client
         SpringBoot -->|"Defect Trigger"| PLC_Service["⚙️ PlcControlService<br>Modbus/TCP"]
     end
@@ -51,12 +52,18 @@ graph TD
         Bridge -->|"Shared Memory"| SHM["RAM: Shared Memory"]
         SHM -->|"IPC Memory Read"| PythonDaemon["Python Daemon<br>YOLOv8 Engine"]
         PythonDaemon -->|"JSON Output"| Pool
+        
+        %% AI Copilot Layer
+        Pool -->|"Invoke COPILOT"| CopilotTask["🤖 AI Copilot Task"]
+        CopilotTask -->|"HTTP API Call"| Gemini["✨ Google Gemini API<br>Tool Calling Agent"]
+        Gemini -->|"FAISS Vector"| ManualStore[("📘 Factory Manual<br>FAISS DB")]
+        Gemini -->|"GET /api/*"| SpringBoot
     end
 
     %% Storage and Hardware Layer
     subgraph Factory_Storage ["Factory Floor & Storage"]
         PLC_Service -->|"Write Coil Port 502"| Slave["🏭 PLC Slave mdslave"]
-        Pool -->|"Async Save"| DB[("🐬 MariaDB<br>History Storage")]
+        Pool -->|"Async Save"| DB[("🐬 MariaDB<br>History, Users, Audit Logs")]
     end
 ```
 
@@ -155,6 +162,7 @@ erDiagram
     %% Relationship Models
     CAMERA ||--o{ DETECTION_LOG : "creates overall logs"
     CAMERA ||--o{ DEFECT_HISTORY : "records on defects"
+    APP_USER ||--o{ AUDIT_LOG : "generates actions"
 
     %% Entities
     CAMERA {
@@ -177,6 +185,19 @@ erDiagram
         LocalDateTime timestamp "Defect occurrence time"
         String defectType "Type (NG / defect)"
         Double confidence "Defect probability"
+    }
+    
+    APP_USER {
+        Long id PK
+        String username
+        String role "ADMIN, USER"
+    }
+    
+    AUDIT_LOG {
+        Long id PK
+        String username FK
+        String eventType "LOGIN, SYSTEM, DB_RESET"
+        String message
     }
 ```
 
@@ -204,6 +225,16 @@ erDiagram
 ### 6. 🖥️ Hardcore Sci-Fi Monitoring Dashboard
 * **2x2 Grid Formats:** Reactively rescales across diverse monitors. Incorporates high-contrast Cyberpunk/Neon CSS traits. 
 * **Virtual "Simulate Defect" Protocol:** Contains a specialized bypass button testing the entire hardware/network architecture's behavior safely simulating failures over `mdslave`. 
+
+### 7. 🤖 Generative AI Copilot (Gemini Native Tool Calling)
+* **Intelligent Assistant:** Floating chat widget on the dashboard leverages Google Gemini 2.5 Flash.
+* **Database & RAG Integration:** The AI agent autonomously invokes Spring Boot REST APIs using HTTP Basic Auth to fetch live daily defect reports and parses FAISS vector DB manuals to instruct operators on Error Codes and E-Stop recovery methods.
+
+![Admin Audit Logs](file:///C:/Users/%EA%B9%80%EC%A3%BC%EC%98%81/.gemini/antigravity/brain/23b4502f-b271-4078-b8a2-0dadbdb60b07/admin_audit_logs_1772181262861.png)
+
+### 8. 🚨 Full-Stack Observability & Real-Time Alerts
+* **Audit Tracing:** Captures strict `AuditLog` JPA entities tracking Admin logins, system purges, and modifications.
+* **Scheduler & WebSocket Alarms:** Evaluates global defect rates every 60 seconds. Triggers a prominent flashing red alert banner across all connected clients via `/topic/alerts` when thresholds (20%) breach within a 5-minute sliding window.
 
 <br>
 
@@ -280,6 +311,7 @@ gradlew.bat bootRun
 
 | Ver | Date | Enhancements |
 |---------|------|---------|
+| **v1.4.0** | 2026-02 | **Phase 6/7 Enhancement:** Added interactive Gemini AI Copilot, Audit Log Panel, Real-time WebSocket Alarms, PDF Report Generations, Thymeleaf UI components. |
 | **v1.3.0** | 2026-02 | **Phase 3/4/5:** Soft-PLC Modbus hardware commands, 3D WebGL Digital Twin structures, MariaDB relational persistence integrations. |
 | **v1.2.1** | 2026-02 | **Maintenance:** Codebase optimizations, documentation styling upgraded to (42Cabi) styles. |
 | **v1.2.0** | 2026-02 | **Phase 2:** Multi Stream (2x2 Grid), Async Worker Pool infrastructural advancements. |
@@ -292,8 +324,8 @@ gradlew.bat bootRun
 - [x] Multi-camera capability completion (Phase 2)
 - [x] Soft-PLC live physics hardware controls (Phase 3)
 - [x] WebGL 3D graphical digital twin (Phase 4)
-- [x] Defect database history archive system (Phase 5 WIP)
-- [ ] Aggregate statistical frontend analysis views using historical Big Data.
+- [x] Defect database history archive system (Phase 5)
+- [x] Gemini AI Copilot Integration & Alerting (Phase 6/7)
 - [ ] Implement Dockerized independent microservice distributions & CI/CD networks.
 
 <br>

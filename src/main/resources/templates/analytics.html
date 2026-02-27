@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartFactory Vision — 통계 분석</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Apple SD Gothic Neo', sans-serif;
+        }
+
+        .sidebar {
+            width: 220px;
+            flex-shrink: 0;
+        }
+
+        .nav-link {
+            transition: all 0.15s ease;
+        }
+
+        .nav-link.active {
+            background: #EFF6FF;
+            color: #1A56DB;
+            border-left: 3px solid #1A56DB;
+        }
+
+        .nav-link:not(.active):hover {
+            background: #F8FAFC;
+            color: #1A56DB;
+        }
+
+        ::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+
+        .stat-card {
+            transition: box-shadow 0.15s;
+        }
+
+        .stat-card:hover {
+            box-shadow: 0 4px 20px rgba(26, 86, 219, 0.1);
+        }
+    </style>
+</head>
+
+<body class="bg-slate-100 text-slate-800 h-screen overflow-hidden flex">
+
+    
+    <aside class="sidebar bg-white border-r border-slate-200 flex flex-col h-screen overflow-hidden shadow-sm">
+        <div class="px-5 py-5 border-b border-slate-100">
+            <a href="/" class="flex items-center space-x-2.5 no-underline">
+                <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0 shadow">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                        stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                </div>
+                <div>
+                    <div class="text-sm font-bold text-slate-800 leading-tight">SmartFactory</div>
+                    <div class="text-[10px] font-semibold text-blue-600 uppercase tracking-wider leading-tight">Vision
+                    </div>
+                </div>
+            </a>
+        </div>
+        <nav class="flex-1 py-4 px-3 space-y-0.5 overflow-y-auto">
+            <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest px-3 pb-1.5 pt-1">모니터링</p>
+            <a href="/"
+                class="nav-link flex items-center space-x-2.5 px-3 py-2 rounded-lg text-sm font-medium no-underline text-slate-600">
+                <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                    stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                <span>실시간 대시보드</span>
+            </a>
+            <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest px-3 pb-1.5 pt-3">기록 / 분석</p>
+            <a href="/history"
+                class="nav-link flex items-center space-x-2.5 px-3 py-2 rounded-lg text-sm font-medium no-underline text-slate-600">
+                <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                    stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+                <span>검출 이력</span>
+            </a>
+            <a href="/history/analytics"
+                class="nav-link active flex items-center space-x-2.5 px-3 py-2 rounded-lg text-sm font-medium no-underline text-blue-700">
+                <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                    stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+                <span>통계 분석</span>
+            </a>
+            <a href="/history/reports"
+                class="nav-link flex items-center space-x-2.5 px-3 py-2 rounded-lg text-sm font-medium no-underline text-slate-600">
+                <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                    stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <span>리포트</span>
+            </a>
+            <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest px-3 pb-1.5 pt-3">시스템 관리</p>
+            <a href="/admin"
+                class="nav-link flex items-center space-x-2.5 px-3 py-2 rounded-lg text-sm font-medium no-underline text-slate-600">
+                <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                    stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                </svg>
+                <span>관리자 패널</span>
+            </a>
+        </nav>
+        <div class="px-4 py-4 border-t border-slate-100 flex-shrink-0">
+            <div class="flex items-center space-x-2.5">
+                <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                    <span class="text-blue-700 font-bold text-xs"
+                        th:text="${displayName != null ? displayName.substring(0,1) : 'U'}">A</span>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-xs font-semibold text-slate-700 truncate"
+                        th:text="${displayName != null ? displayName : 'User'}">관리자</p>
+                    <p class="text-[10px] text-slate-400 font-medium"
+                        th:text="${userRole != null ? userRole : 'WORKER'}">ADMIN</p>
+                </div>
+                <a href="/logout" onclick="return confirm('로그아웃 하시겠습니까?')"
+                    class="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                </a>
+            </div>
+        </div>
+    </aside>
+
+    
+    <div class="flex-1 flex flex-col h-screen min-w-0 overflow-hidden">
+
+        <header
+            class="bg-white border-b border-slate-200 px-6 py-3 flex items-center justify-between flex-shrink-0 shadow-sm">
+            <div>
+                <h1 class="text-sm font-bold text-slate-800">통계 분석 대시보드</h1>
+                <p class="text-[11px] text-slate-400 mt-0.5">AI 비전 검사 성능 · 시간대별 추이 · 카메라별 분석</p>
+            </div>
+            <button onclick="loadAnalytics()"
+                class="px-3 py-1.5 text-[11px] font-semibold text-blue-600 border border-blue-200 hover:bg-blue-50 rounded-lg transition-colors">새로고침</button>
+        </header>
+
+        <main class="flex-1 overflow-y-auto p-4 min-h-0">
+
+            
+            <div class="grid grid-cols-4 gap-4 mb-4">
+                <div class="stat-card bg-white rounded-xl border border-slate-200 shadow-sm p-4">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">총 검출 건수</p>
+                    <p class="text-3xl font-bold text-slate-800" id="kpiTotal">—</p>
+                    <p class="text-[11px] text-slate-400 mt-1">최근 50건 기준</p>
+                </div>
+                <div class="stat-card bg-white rounded-xl border border-slate-200 shadow-sm p-4">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">불량 건수</p>
+                    <p class="text-3xl font-bold text-red-500" id="kpiDefects">—</p>
+                    <p class="text-[11px] text-slate-400 mt-1">DEFECT / NG</p>
+                </div>
+                <div class="stat-card bg-white rounded-xl border border-slate-200 shadow-sm p-4">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">불량률</p>
+                    <p class="text-3xl font-bold text-orange-500" id="kpiRate">—</p>
+                    <p class="text-[11px] text-slate-400 mt-1">Defect Rate</p>
+                </div>
+                <div class="stat-card bg-white rounded-xl border border-slate-200 shadow-sm p-4">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">정상 수율</p>
+                    <p class="text-3xl font-bold text-emerald-500" id="kpiYield">—</p>
+                    <p class="text-[11px] text-slate-400 mt-1">Yield Rate</p>
+                </div>
+            </div>
+
+            
+            <div class="grid grid-cols-3 gap-4 mb-4">
+
+                
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 flex flex-col"
+                    style="height:280px">
+                    <h3 class="text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-3">정상 / 불량 비율</h3>
+                    <div class="flex-1 relative min-h-0">
+                        <canvas id="ratioChart"></canvas>
+                    </div>
+                </div>
+
+                
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 flex flex-col col-span-2"
+                    style="height:280px">
+                    <h3 class="text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-3">시간대별 검출 추이 (최근 24시간)
+                    </h3>
+                    <div class="flex-1 relative min-h-0">
+                        <canvas id="yieldChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            
+            <div class="grid grid-cols-2 gap-4">
+
+                
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 flex flex-col"
+                    style="height:260px">
+                    <h3 class="text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-3">카메라별 불량 검출 건수</h3>
+                    <div class="flex-1 relative min-h-0">
+                        <canvas id="heatmapChart"></canvas>
+                    </div>
+                </div>
+
+                
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 flex flex-col"
+                    style="height:260px">
+                    <h3 class="text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-3">불량 유형 Top 5</h3>
+                    <div class="flex-1 relative min-h-0">
+                        <canvas id="top5Chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        let ratioChart, yieldChart, heatmapChart, top5Chart;
+
+        const chartDefaults = {
+            font: { family: "'Inter', sans-serif", size: 11 },
+            color: '#64748b'
+        };
+        Chart.defaults.font = chartDefaults.font;
+        Chart.defaults.color = chartDefaults.color;
+
+        function initCharts() {
+            // Ratio Doughnut
+            ratioChart = new Chart(document.getElementById('ratioChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['정상 (OK)', '불량 (DEFECT)'],
+                    datasets: [{
+                        data: [0, 0], backgroundColor: ['#10b981', '#ef4444'],
+                        borderColor: ['#fff', '#fff'], borderWidth: 3, hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false, cutout: '72%',
+                    plugins: { legend: { position: 'bottom', labels: { padding: 16, font: { size: 11 } } } }
+                }
+            });
+
+            // Yield Line Chart
+            yieldChart = new Chart(document.getElementById('yieldChart'), {
+                type: 'line',
+                data: {
+                    labels: [], datasets: [
+                        {
+                            label: '전체 검출', data: [], borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,0.1)',
+                            borderWidth: 2, tension: 0.3, fill: true, pointRadius: 3
+                        },
+                        {
+                            label: '불량', data: [], borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,0.05)',
+                            borderWidth: 2, tension: 0.3, fill: true, pointRadius: 3
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: '#f1f5f9' }, border: { color: '#e2e8f0' } },
+                        x: { grid: { display: false }, border: { color: '#e2e8f0' } }
+                    },
+                    plugins: { legend: { position: 'top', align: 'end', labels: { padding: 16, font: { size: 11 } } } }
+                }
+            });
+
+            // Camera Bar Chart
+            heatmapChart = new Chart(document.getElementById('heatmapChart'), {
+                type: 'bar',
+                data: {
+                    labels: ['CAM-01', 'CAM-02', 'CAM-03', 'CAM-04'],
+                    datasets: [
+                        { label: '정상', data: [0, 0, 0, 0], backgroundColor: 'rgba(16,185,129,0.8)', borderRadius: 4 },
+                        { label: '불량', data: [0, 0, 0, 0], backgroundColor: 'rgba(239,68,68,0.8)', borderRadius: 4 }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    scales: { x: { grid: { display: false } }, y: { beginAtZero: true, grid: { color: '#f1f5f9' } } },
+                    plugins: { legend: { position: 'top', align: 'end', labels: { padding: 16, font: { size: 11 } } } }
+                }
+            });
+
+            // Top 5 Labels
+            top5Chart = new Chart(document.getElementById('top5Chart'), {
+                type: 'bar',
+                data: {
+                    labels: [], datasets: [
+                        { label: '검출 횟수', data: [], backgroundColor: 'rgba(26,86,219,0.8)', borderRadius: 4 }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+                    scales: { x: { beginAtZero: true, grid: { color: '#f1f5f9' } }, y: { grid: { display: false } } },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        async function loadAnalytics() {
+            try {
+                const res = await fetch('/api/history/recent?limit=500');
+                if (!res.ok) throw new Error('API Error');
+                const data = await res.json();
+
+                const total = data.length;
+                const defects = data.filter(r => r.status === 'DEFECT' || (r.label || '').toLowerCase().includes('defect') || (r.label || '').toLowerCase().includes('ng'));
+                const defCount = defects.length, okCount = total - defCount;
+                const defRate = total > 0 ? ((defCount / total) * 100).toFixed(1) + '%' : '0%';
+                const yieldRate = total > 0 ? ((okCount / total) * 100).toFixed(1) + '%' : '100%';
+
+                document.getElementById('kpiTotal').textContent = total.toLocaleString();
+                document.getElementById('kpiDefects').textContent = defCount.toLocaleString();
+                document.getElementById('kpiRate').textContent = defRate;
+                document.getElementById('kpiYield').textContent = yieldRate;
+
+                // Update ratio
+                ratioChart.data.datasets[0].data = [okCount, defCount];
+                ratioChart.update();
+
+                // Per-camera breakdown
+                const camNames = ['cam1', 'cam2', 'cam3', 'cam4'];
+                const camOk = [0, 0, 0, 0], camDef = [0, 0, 0, 0];
+                data.forEach(r => {
+                    const idx = camNames.indexOf(r.cameraId);
+                    if (idx >= 0) {
+                        const isD = r.status === 'DEFECT' || (r.label || '').toLowerCase().includes('defect') || (r.label || '').toLowerCase().includes('ng');
+                        isD ? camDef[idx]++ : camOk[idx]++;
+                    }
+                });
+                heatmapChart.data.datasets[0].data = camOk;
+                heatmapChart.data.datasets[1].data = camDef;
+                heatmapChart.update();
+
+                // Yield over time (hourly buckets)
+                const hourMap = {};
+                data.forEach(r => {
+                    if (!r.timestamp) return;
+                    const h = new Date(r.timestamp).getHours();
+                    const key = `${h.toString().padStart(2, '0')}:00`;
+                    if (!hourMap[key]) hourMap[key] = { total: 0, def: 0 };
+                    hourMap[key].total++;
+                    const isD = r.status === 'DEFECT' || (r.label || '').toLowerCase().includes('defect') || (r.label || '').toLowerCase().includes('ng');
+                    if (isD) hourMap[key].def++;
+                });
+                const hours = Object.keys(hourMap).sort();
+                yieldChart.data.labels = hours;
+                yieldChart.data.datasets[0].data = hours.map(h => hourMap[h].total);
+                yieldChart.data.datasets[1].data = hours.map(h => hourMap[h].def);
+                yieldChart.update();
+
+                // Top 5 labels
+                const labelMap = {};
+                defects.forEach(r => { const l = r.label || 'unknown'; labelMap[l] = (labelMap[l] || 0) + 1; });
+                const sorted = Object.entries(labelMap).sort((a, b) => b[1] - a[1]).slice(0, 5);
+                top5Chart.data.labels = sorted.map(e => e[0]);
+                top5Chart.data.datasets[0].data = sorted.map(e => e[1]);
+                top5Chart.update();
+
+            } catch (e) {
+                console.error('Analytics load error:', e);
+            }
+        }
+
+        window.addEventListener('load', () => { initCharts(); loadAnalytics(); });
+    </script>
+</body>
+
+</html>

@@ -1,5 +1,7 @@
 package com.smartfactory.vision.system.controller;
 
+import com.smartfactory.vision.control.OpcUaClientService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -11,8 +13,11 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/system")
+@RequiredArgsConstructor
 @Slf4j
 public class SystemApiController {
+
+    private final OpcUaClientService opcUaClientService;
 
     @PostMapping("/plc/command")
     public ResponseEntity<String> executePlcCommand(@RequestBody Map<String, String> payload) {
@@ -22,9 +27,9 @@ public class SystemApiController {
 
         log.info("[HMI -> PLC] Received command '{}' for device '{}' from source '{}'", command, device, source);
 
-        // Dummy processing representing a network call to the real PLC
-        if ("EMERGENCY_STOP".equals(command) && "ROBOT_ARM_1".equals(device)) {
-            log.warn("🚨 EMERGENCY STOP ACTIVATED FOR ROBOT_ARM_1! 🚨");
+        if ("EMERGENCY_STOP".equals(command)) {
+            log.warn("🚨 EMERGENCY STOP ACTIVATED FOR {}! 🚨", device);
+            opcUaClientService.triggerEStop();
             return ResponseEntity.ok("Command executed successfully");
         } else if ("RESTART".equals(command)) {
             log.info("Restart command sequence initiated for {}", device);
@@ -32,5 +37,12 @@ public class SystemApiController {
         }
 
         return ResponseEntity.badRequest().body("Unknown command or device");
+    }
+
+    @PostMapping("/plc/reset")
+    public ResponseEntity<String> resetPlcCommand() {
+        log.info("[HMI -> PLC] Received RESET Command from UI");
+        opcUaClientService.resetPlc();
+        return ResponseEntity.ok("PLC state reset successfully");
     }
 }

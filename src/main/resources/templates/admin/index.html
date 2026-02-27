@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartFactory Vision — 관리자 패널</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Apple SD Gothic Neo', sans-serif;
+        }
+
+        .sidebar {
+            width: 220px;
+            flex-shrink: 0;
+        }
+
+        .nav-link {
+            transition: all 0.15s ease;
+        }
+
+        .nav-link.active {
+            background: #EFF6FF;
+            color: #1A56DB;
+            border-left: 3px solid #1A56DB;
+        }
+
+        .nav-link:not(.active):hover {
+            background: #F8FAFC;
+            color: #1A56DB;
+        }
+
+        ::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+
+        .kpi-card {
+            transition: box-shadow 0.15s;
+        }
+
+        .kpi-card:hover {
+            box-shadow: 0 4px 20px rgba(26, 86, 219, 0.1);
+        }
+    </style>
+</head>
+
+<body class="bg-slate-100 text-slate-800 h-screen overflow-hidden flex">
+
+    
+    <aside class="sidebar bg-white border-r border-slate-200 flex flex-col h-screen overflow-hidden shadow-sm">
+        <div class="px-5 py-5 border-b border-slate-100">
+            <a href="/" class="flex items-center space-x-2.5 no-underline">
+                <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0 shadow">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                        stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                </div>
+                <div>
+                    <div class="text-sm font-bold text-slate-800 leading-tight">SmartFactory</div>
+                    <div class="text-[10px] font-semibold text-blue-600 uppercase tracking-wider leading-tight">Vision
+                    </div>
+                </div>
+            </a>
+        </div>
+        <nav class="flex-1 py-4 px-3 space-y-0.5 overflow-y-auto">
+            <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest px-3 pb-1.5 pt-1">모니터링</p>
+            <a href="/"
+                class="nav-link flex items-center space-x-2.5 px-3 py-2 rounded-lg text-sm font-medium no-underline text-slate-600"><svg
+                    class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                    stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg><span>실시간 대시보드</span></a>
+            <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest px-3 pb-1.5 pt-3">기록 / 분석</p>
+            <a href="/history"
+                class="nav-link flex items-center space-x-2.5 px-3 py-2 rounded-lg text-sm font-medium no-underline text-slate-600"><svg
+                    class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                    stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg><span>검출 이력</span></a>
+            <a href="/history/analytics"
+                class="nav-link flex items-center space-x-2.5 px-3 py-2 rounded-lg text-sm font-medium no-underline text-slate-600"><svg
+                    class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                    stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg><span>통계 분석</span></a>
+            <a href="/history/reports"
+                class="nav-link flex items-center space-x-2.5 px-3 py-2 rounded-lg text-sm font-medium no-underline text-slate-600"><svg
+                    class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                    stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg><span>리포트</span></a>
+            <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest px-3 pb-1.5 pt-3">시스템 관리</p>
+            <a href="/admin"
+                class="nav-link active flex items-center space-x-2.5 px-3 py-2 rounded-lg text-sm font-medium no-underline text-blue-700"><svg
+                    class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                    stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                </svg><span>개요</span></a>
+            <a href="/admin/users"
+                class="nav-link flex items-center space-x-2.5 px-3 py-2 rounded-lg text-sm font-medium no-underline text-slate-600 pl-8"><svg
+                    class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                    stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg><span>사용자 관리</span></a>
+            <a href="/admin/cameras"
+                class="nav-link flex items-center space-x-2.5 px-3 py-2 rounded-lg text-sm font-medium no-underline text-slate-600 pl-8"><svg
+                    class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                    stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M15 10l4.553-2.069A1 1 0 0121 8.867v6.266a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg><span>카메라 설정</span></a>
+            <a href="/admin/settings"
+                class="nav-link flex items-center space-x-2.5 px-3 py-2 rounded-lg text-sm font-medium no-underline text-slate-600 pl-8"><svg
+                    class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                    stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg><span>시스템 설정</span></a>
+            <a href="/admin/audit"
+                class="nav-link flex items-center space-x-2.5 px-3 py-2 rounded-lg text-sm font-medium no-underline text-slate-600 pl-8"><svg
+                    class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                    stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg><span>감사 로그</span></a>
+        </nav>
+        <div class="px-4 py-4 border-t border-slate-100 flex-shrink-0">
+            <div class="flex items-center space-x-2.5">
+                <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                    <span class="text-blue-700 font-bold text-xs"
+                        th:text="${displayName != null ? displayName.substring(0,1) : 'A'}">A</span>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-xs font-semibold text-slate-700 truncate"
+                        th:text="${displayName != null ? displayName : '관리자'}">관리자</p>
+                    <p class="text-[10px] text-slate-400 font-medium">ADMIN</p>
+                </div>
+                <a href="/logout" onclick="return confirm('로그아웃 하시겠습니까?')"
+                    class="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                </a>
+            </div>
+        </div>
+    </aside>
+
+    
+    <div class="flex-1 flex flex-col h-screen min-w-0 overflow-hidden">
+        <header
+            class="bg-white border-b border-slate-200 px-6 py-3 flex items-center justify-between flex-shrink-0 shadow-sm">
+            <div>
+                <h1 class="text-sm font-bold text-slate-800">관리자 대시보드</h1>
+                <p class="text-[11px] text-slate-400 mt-0.5">시스템 전체 현황 · ADMIN 전용</p>
+            </div>
+            <div class="flex items-center space-x-2">
+                <span
+                    class="text-[10px] font-bold px-2.5 py-1 bg-red-50 text-red-600 border border-red-200 rounded-full">🔒
+                    ADMIN ONLY</span>
+            </div>
+        </header>
+
+        <main class="flex-1 overflow-y-auto p-6 min-h-0">
+
+            
+            <div class="grid grid-cols-4 gap-4 mb-6">
+                <div class="kpi-card bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+                    <div class="flex items-center justify-between mb-3">
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">등록 사용자</p>
+                        <div class="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center">
+                            <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                        </div>
+                    </div>
+                    <p class="text-3xl font-bold text-slate-800" id="kpiUsers" th:text="${userCount}">—</p>
+                    <p class="text-[11px] text-slate-400 mt-1">명</p>
+                </div>
+                <div class="kpi-card bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+                    <div class="flex items-center justify-between mb-3">
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">등록 카메라</p>
+                        <div class="w-8 h-8 bg-emerald-50 rounded-lg flex items-center justify-center">
+                            <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M15 10l4.553-2.069A1 1 0 0121 8.867v6.266a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                            </svg>
+                        </div>
+                    </div>
+                    <p class="text-3xl font-bold text-emerald-600">4</p>
+                    <p class="text-[11px] text-slate-400 mt-1">모두 활성화</p>
+                </div>
+                <div class="kpi-card bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+                    <div class="flex items-center justify-between mb-3">
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">오늘 검출</p>
+                        <div class="w-8 h-8 bg-orange-50 rounded-lg flex items-center justify-center">
+                            <svg class="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                            </svg>
+                        </div>
+                    </div>
+                    <p class="text-3xl font-bold text-orange-500" id="kpiToday">—</p>
+                    <p class="text-[11px] text-slate-400 mt-1">건</p>
+                </div>
+                <div class="kpi-card bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+                    <div class="flex items-center justify-between mb-3">
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">시스템 상태</p>
+                        <div class="w-8 h-8 bg-green-50 rounded-lg flex items-center justify-center">
+                            <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                    </div>
+                    <p class="text-xl font-bold text-green-600">ONLINE</p>
+                    <p class="text-[11px] text-slate-400 mt-1">정상 운영 중</p>
+                </div>
+            </div>
+
+            
+            <div class="grid grid-cols-3 gap-4">
+                <a href="/admin/users"
+                    class="kpi-card block bg-white rounded-xl border border-slate-200 shadow-sm p-5 no-underline hover:border-blue-300">
+                    <div class="flex items-center space-x-3 mb-3">
+                        <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
+                            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="text-sm font-bold text-slate-800">사용자 관리</p>
+                            <p class="text-[11px] text-slate-400">추가 · 삭제 · 역할 변경</p>
+                        </div>
+                    </div>
+                    <p class="text-[11px] text-blue-600 font-semibold">관리 페이지로 →</p>
+                </a>
+                <a href="/admin/cameras"
+                    class="kpi-card block bg-white rounded-xl border border-slate-200 shadow-sm p-5 no-underline hover:border-blue-300">
+                    <div class="flex items-center space-x-3 mb-3">
+                        <div class="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center">
+                            <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M15 10l4.553-2.069A1 1 0 0121 8.867v6.266a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="text-sm font-bold text-slate-800">카메라 설정</p>
+                            <p class="text-[11px] text-slate-400">활성화 · 이름 · 위치 편집</p>
+                        </div>
+                    </div>
+                    <p class="text-[11px] text-emerald-600 font-semibold">설정 페이지로 →</p>
+                </a>
+                <a href="/admin/settings"
+                    class="kpi-card block bg-white rounded-xl border border-slate-200 shadow-sm p-5 no-underline hover:border-blue-300">
+                    <div class="flex items-center space-x-3 mb-3">
+                        <div class="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center">
+                            <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="text-sm font-bold text-slate-800">시스템 설정</p>
+                            <p class="text-[11px] text-slate-400">AI 신뢰도 · 프레임 수 조정</p>
+                        </div>
+                    </div>
+                    <p class="text-[11px] text-purple-600 font-semibold">설정 페이지로 →</p>
+                </a>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        async function loadStats() {
+            try {
+                const r = await fetch('/api/history/recent?limit=9999');
+                if (!r.ok) return;
+                const data = await r.json();
+                const today = new Date().toDateString();
+                const todayCount = data.filter(d => d.timestamp && new Date(d.timestamp).toDateString() === today).length;
+                document.getElementById('kpiToday').textContent = todayCount.toLocaleString();
+            } catch (e) { }
+        }
+        window.addEventListener('load', loadStats);
+    </script>
+</body>
+
+</html>

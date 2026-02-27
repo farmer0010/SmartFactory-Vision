@@ -1,539 +1,484 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
 
 <head>
     <meta charset="UTF-8">
-    <title>SmartFactory History & Stats</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartFactory Vision — 검출 이력</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
+        * {
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: 'Courier New', Courier, monospace;
+            font-family: 'Inter', 'Apple SD Gothic Neo', sans-serif;
         }
 
-        .neon-border {
-            box-shadow: 0 0 10px #22d3ee, 0 0 20px #22d3ee inset;
+        .sidebar {
+            width: 220px;
+            flex-shrink: 0;
         }
 
-        .scan-line {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 5px;
-            background: rgba(34, 211, 238, 0.5);
-            box-shadow: 0 0 10px #22d3ee;
-            animation: scan 2s linear infinite;
-            z-index: 10;
-            pointer-events: none;
+        .nav-link {
+            transition: all 0.15s ease;
         }
 
-        @keyframes scan {
-            0% {
-                top: 0%;
-                opacity: 0;
-            }
+        .nav-link.active {
+            background: #EFF6FF;
+            color: #1A56DB;
+            border-left: 3px solid #1A56DB;
+        }
 
-            5% {
-                opacity: 1;
-            }
-
-            95% {
-                opacity: 1;
-            }
-
-            100% {
-                top: 100%;
-                opacity: 0;
-            }
+        .nav-link:not(.active):hover {
+            background: #F8FAFC;
+            color: #1A56DB;
         }
 
         ::-webkit-scrollbar {
-            width: 8px;
+            width: 5px;
         }
 
         ::-webkit-scrollbar-track {
-            background: #0f172a;
+            background: #f1f5f9;
         }
 
         ::-webkit-scrollbar-thumb {
-            background: #1e293b;
-            border-radius: 4px;
+            background: #cbd5e1;
+            border-radius: 3px;
         }
 
-        ::-webkit-scrollbar-thumb:hover {
-            background: #334155;
+        .table-row:hover td {
+            background: #F0F7FF;
+        }
+
+        .status-ok {
+            background: #ECFDF5;
+            color: #065F46;
+            border: 1px solid #A7F3D0;
+        }
+
+        .status-ng {
+            background: #FFF5F5;
+            color: #9B1C1C;
+            border: 1px solid #FCA5A5;
+        }
+
+        .status-pulse-ok {
+            background: #F0FDF4;
+            color: #166534;
+            border: 1px solid #86EFAC;
+        }
+
+        /* Pagination */
+        .page-btn {
+            min-width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.1s;
+        }
+
+        .page-btn.active {
+            background: #1A56DB;
+            color: white;
+        }
+
+        .page-btn:not(.active):hover {
+            background: #EFF6FF;
+            color: #1A56DB;
+        }
+
+        .page-btn.disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
         }
     </style>
 </head>
 
-<body class="bg-slate-900 text-cyan-400 h-screen overflow-hidden flex flex-col">
-    <!-- Header -->
-    <header class="flex justify-between items-center p-4 border-b border-cyan-800 bg-slate-950 shadow-lg z-50">
-        <div class="flex items-center space-x-3">
-            <svg class="w-8 h-8 text-cyan-400 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z">
-                </path>
-            </svg>
-            <h1
-                class="text-2xl font-bold tracking-widest uppercase text-cyan-300 drop-shadow-[0_0_5px_rgba(34,211,238,0.8)]">
-                SmartFactory<span class="text-white">History</span>
-            </h1>
+<body class="bg-slate-100 text-slate-800 h-screen overflow-hidden flex">
+
+    
+    <aside class="sidebar bg-white border-r border-slate-200 flex flex-col h-screen overflow-hidden shadow-sm">
+        <div class="px-5 py-5 border-b border-slate-100">
+            <a href="/" class="flex items-center space-x-2.5 no-underline">
+                <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0 shadow">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                        stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                </div>
+                <div>
+                    <div class="text-sm font-bold text-slate-800 leading-tight">SmartFactory</div>
+                    <div class="text-[10px] font-semibold text-blue-600 uppercase tracking-wider leading-tight">Vision
+                    </div>
+                </div>
+            </a>
         </div>
-        <nav class="flex space-x-4">
+        <nav class="flex-1 py-4 px-3 space-y-0.5 overflow-y-auto">
+            <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest px-3 pb-1.5 pt-1">모니터링</p>
             <a href="/"
-                class="px-3 py-1 bg-slate-800 hover:bg-cyan-900/50 text-slate-400 hover:text-cyan-300 rounded border border-transparent hover:border-cyan-500/50 transition-all text-xs font-bold uppercase tracking-wider">Dashboard</a>
+                class="nav-link flex items-center space-x-2.5 px-3 py-2 rounded-lg text-sm font-medium no-underline text-slate-600">
+                <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                    stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                <span>실시간 대시보드</span>
+            </a>
+            <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest px-3 pb-1.5 pt-3">기록 / 분석</p>
             <a href="/history"
-                class="px-3 py-1 bg-cyan-900/30 text-cyan-300 rounded border border-cyan-500/50 shadow-[0_0_10px_rgba(34,211,238,0.2)] text-xs font-bold uppercase tracking-wider">Analysis</a>
+                class="nav-link active flex items-center space-x-2.5 px-3 py-2 rounded-lg text-sm font-medium no-underline text-blue-700">
+                <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                    stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+                <span>검출 이력</span>
+            </a>
+            <a href="/history/analytics"
+                class="nav-link flex items-center space-x-2.5 px-3 py-2 rounded-lg text-sm font-medium no-underline text-slate-600">
+                <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                    stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+                <span>통계 분석</span>
+            </a>
+            <a href="/history/reports"
+                class="nav-link flex items-center space-x-2.5 px-3 py-2 rounded-lg text-sm font-medium no-underline text-slate-600">
+                <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                    stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <span>리포트</span>
+            </a>
+            <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest px-3 pb-1.5 pt-3">시스템 관리</p>
+            <a href="/admin"
+                class="nav-link flex items-center space-x-2.5 px-3 py-2 rounded-lg text-sm font-medium no-underline text-slate-600">
+                <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                    stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                </svg>
+                <span>관리자 패널</span>
+            </a>
         </nav>
-        <div class="flex items-center space-x-4">
-            <div class="text-[10px] text-slate-500 tracking-widest">SYS.VER.1.0</div>
+        <div class="px-4 py-4 border-t border-slate-100 flex-shrink-0">
+            <div class="flex items-center space-x-2.5">
+                <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                    <span class="text-blue-700 font-bold text-xs"
+                        th:text="${displayName != null ? displayName.substring(0,1) : 'U'}">A</span>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-xs font-semibold text-slate-700 truncate"
+                        th:text="${displayName != null ? displayName : 'User'}">관리자</p>
+                    <p class="text-[10px] text-slate-400 font-medium"
+                        th:text="${userRole != null ? userRole : 'WORKER'}">ADMIN</p>
+                </div>
+                <a href="/logout" onclick="return confirm('로그아웃 하시겠습니까?')"
+                    class="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors"
+                    title="로그아웃">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                </a>
+            </div>
         </div>
-    </header>
+    </aside>
 
-    <!-- Main Content -->
-    <main class="flex-1 flex flex-col gap-4 p-4 min-h-0 overflow-y-auto">
-        <!-- Top Analytics Row -->
-        <div class="grid grid-cols-3 gap-4 h-64 shrink-0">
+    
+    <div class="flex-1 flex flex-col h-screen min-w-0 overflow-hidden">
 
-            <!-- Ratio Doughnut -->
-            <div
-                class="bg-slate-800 p-4 rounded-lg border border-cyan-900/50 shadow-[0_0_15px_rgba(0,0,0,0.5)] flex flex-col">
-                <h3
-                    class="text-xs font-bold uppercase border-b border-cyan-900/30 pb-2 mb-2 text-slate-300 tracking-wider">
-                    Detection Ratio (Recent 50)</h3>
-                <div class="flex-1 relative w-full flex items-center justify-center">
-                    <canvas id="ratioChart"></canvas>
-                </div>
-                <div class="mt-2 flex justify-around text-xs border-t border-cyan-900/30 pt-2 shrink-0">
-                    <div class="text-center">
-                        <div class="text-slate-400 mb-1">Total Logs</div>
-                        <div id="totalCount"
-                            class="text-2xl font-bold text-white drop-shadow-[0_0_5px_rgba(255,255,255,0.5)]">0</div>
-                    </div>
-                    <div class="text-center">
-                        <div class="text-slate-400 mb-1">Defect Rate</div>
-                        <div id="defectRate"
-                            class="text-2xl font-bold text-red-400 drop-shadow-[0_0_5px_rgba(248,113,113,0.5)]">0%</div>
-                    </div>
-                </div>
+        
+        <header
+            class="bg-white border-b border-slate-200 px-6 py-3 flex items-center justify-between flex-shrink-0 shadow-sm">
+            <div>
+                <h1 class="text-sm font-bold text-slate-800">검출 이력 로그</h1>
+                <p class="text-[11px] text-slate-400 mt-0.5">AI 비전 검사 기록 · 필터 및 Time-Machine 리플레이</p>
             </div>
-
-            <!-- Yield Line Chart -->
-            <div
-                class="bg-slate-800 p-4 rounded-lg border border-cyan-900/50 shadow-[0_0_15px_rgba(0,0,0,0.5)] flex flex-col">
-                <h3
-                    class="text-xs font-bold uppercase border-b border-cyan-900/30 pb-2 mb-2 text-slate-300 tracking-wider shrink-0">
-                    Yield Monitoring (24h)</h3>
-                <div class="flex-1 relative w-full h-full flex items-center justify-center pt-2 min-h-0">
-                    <canvas id="yieldChart"></canvas>
-                </div>
+            <div class="flex items-center space-x-2">
+                <button onclick="cleanUpDatabase()"
+                    class="px-3 py-1.5 text-[11px] font-semibold text-red-600 border border-red-200 hover:bg-red-50 rounded-lg transition-colors">DB
+                    초기화</button>
+                <button onclick="fetchAllData()"
+                    class="px-3 py-1.5 text-[11px] font-semibold text-blue-600 border border-blue-200 hover:bg-blue-50 rounded-lg transition-colors">새로고침</button>
             </div>
+        </header>
 
-            <!-- Heatmap Bar Chart -->
-            <div
-                class="bg-slate-800 p-4 rounded-lg border border-cyan-900/50 shadow-[0_0_15px_rgba(0,0,0,0.5)] flex flex-col">
-                <h3
-                    class="text-xs font-bold uppercase border-b border-cyan-900/30 pb-2 mb-2 text-slate-300 tracking-wider shrink-0">
-                    Defect Heatmap (Camera)</h3>
-                <div class="flex-1 relative w-full h-full flex items-center justify-center pt-2 min-h-0">
-                    <canvas id="heatmapChart"></canvas>
-                </div>
+        
+        <div class="bg-white border-b border-slate-100 px-6 py-3 flex items-center space-x-3 flex-shrink-0">
+            <div class="flex items-center space-x-2">
+                <label class="text-[11px] font-semibold text-slate-500">카메라</label>
+                <select id="filterCamera" onchange="applyFilters()"
+                    class="text-xs border border-slate-200 rounded-md px-2 py-1 bg-white text-slate-700 focus:outline-none focus:border-blue-400">
+                    <option value="">전체</option>
+                    <option value="cam1">CAM-01</option>
+                    <option value="cam2">CAM-02</option>
+                    <option value="cam3">CAM-03</option>
+                    <option value="cam4">CAM-04</option>
+                </select>
             </div>
-
+            <div class="flex items-center space-x-2">
+                <label class="text-[11px] font-semibold text-slate-500">상태</label>
+                <select id="filterStatus" onchange="applyFilters()"
+                    class="text-xs border border-slate-200 rounded-md px-2 py-1 bg-white text-slate-700 focus:outline-none focus:border-blue-400">
+                    <option value="">전체</option>
+                    <option value="OK">정상 (OK)</option>
+                    <option value="DEFECT">불량 (DEFECT)</option>
+                </select>
+            </div>
+            <div class="flex items-center space-x-2">
+                <label class="text-[11px] font-semibold text-slate-500">검색</label>
+                <input id="filterSearch" type="text" oninput="applyFilters()" placeholder="레이블 검색..."
+                    class="text-xs border border-slate-200 rounded-md px-2 py-1 bg-white text-slate-700 focus:outline-none focus:border-blue-400 w-36">
+            </div>
+            <span class="ml-auto text-[11px] text-slate-400">
+                총 <span id="totalCount" class="font-bold text-slate-600">0</span>건
+            </span>
         </div>
 
-        <!-- Bottom Row (Table + Reports) -->
-        <div class="grid grid-cols-12 gap-4 flex-1 min-h-[400px]">
+        
+        <main class="flex-1 flex min-h-0 overflow-hidden p-4 gap-4">
 
-            <!-- Table Area -->
+            
             <div
-                class="col-span-9 bg-slate-800 rounded-lg border border-cyan-900/50 shadow-[0_0_15px_rgba(0,0,0,0.5)] flex flex-col h-[500px] overflow-hidden relative group">
-                <div class="scan-line opacity-20"></div>
-                <div class="p-4 border-b border-cyan-900/50 bg-slate-800/80 z-20 flex justify-between items-center">
-                    <h3 class="text-xs font-bold uppercase text-slate-300 tracking-wider">Recent Detection Logs</h3>
-                    <button onclick="fetchAllData()"
-                        class="text-[10px] border border-cyan-700 text-cyan-400 hover:bg-cyan-900/50 px-3 py-1.5 rounded transition-colors uppercase font-bold tracking-wider">Refresh
-                        Data</button>
-                </div>
-                <div class="flex-1 overflow-auto z-20">
-                    <table class="w-full text-left text-sm text-slate-300">
-                        <thead
-                            class="text-[10px] uppercase bg-slate-900/50 text-slate-400 sticky top-0 backdrop-blur-md z-10 border-b border-cyan-900/50">
+                class="flex-1 bg-white rounded-xl border border-slate-200 shadow-sm flex flex-col overflow-hidden min-w-0">
+                <div class="flex-1 overflow-y-auto min-h-0">
+                    <table class="w-full text-left text-sm table-fixed">
+                        <thead class="bg-slate-50 border-b border-slate-200 sticky top-0 z-10">
                             <tr>
-                                <th class="px-4 py-3">ID</th>
-                                <th class="px-4 py-3">Timestamp</th>
-                                <th class="px-4 py-3">Camera</th>
-                                <th class="px-4 py-3">Label</th>
-                                <th class="px-4 py-3">Confidence</th>
-                                <th class="px-4 py-3">Status</th>
+                                <th
+                                    class="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider w-16">
+                                    ID</th>
+                                <th
+                                    class="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider w-40">
+                                    시각</th>
+                                <th
+                                    class="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider w-24">
+                                    카메라</th>
+                                <th class="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider">레이블
+                                </th>
+                                <th
+                                    class="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider w-28">
+                                    신뢰도</th>
+                                <th
+                                    class="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider w-24">
+                                    상태</th>
+                                <th
+                                    class="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider w-20">
+                                    리플레이</th>
                             </tr>
                         </thead>
-                        <tbody id="historyTableBody" class="font-mono text-[11px] divide-y divide-slate-700/50">
+                        <tbody id="historyTableBody" class="divide-y divide-slate-100">
                             <tr>
-                                <td colspan="6" class="p-4 text-center text-slate-500 italic">Connecting to Database...
+                                <td colspan="7" class="px-4 py-8 text-center text-[12px] text-slate-400">데이터베이스 연결 중...
                                 </td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
-            </div>
 
-            <!-- Report Export Area -->
-            <div
-                class="col-span-3 bg-slate-800 p-4 rounded-lg border border-cyan-900/50 shadow-[0_0_15px_rgba(0,0,0,0.5)] flex flex-col h-[500px]">
-                <h3
-                    class="text-xs font-bold uppercase border-b border-cyan-900/30 pb-2 mb-4 text-slate-300 tracking-wider text-center">
-                    Export Reports</h3>
-
-                <div class="flex-1 flex flex-col justify-center space-y-6 px-4">
-                    <p class="text-[11px] text-slate-400 mb-4 text-center">Download automated QA inspection reports for
-                        management review.</p>
-
-                    <a href="/api/history/report/csv"
-                        class="group flex flex-col items-center justify-center p-4 rounded-xl border border-emerald-700/50 bg-emerald-900/20 hover:bg-emerald-800/40 transition-all shadow-[0_0_10px_rgba(16,185,129,0.1)] hover:shadow-[0_0_15px_rgba(16,185,129,0.4)]">
-                        <svg class="w-10 h-10 text-emerald-400 mb-2 group-hover:scale-110 transition-transform"
-                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
-                            </path>
-                        </svg>
-                        <span class="text-sm font-bold text-emerald-300 tracking-widest uppercase">Export CSV</span>
-                        <span class="text-[10px] text-emerald-500/70 mt-1">Raw Dataset for Excel</span>
-                    </a>
-
-                    <a href="/api/history/report/pdf"
-                        class="group flex flex-col items-center justify-center p-4 rounded-xl border border-rose-700/50 bg-rose-900/20 hover:bg-rose-800/40 transition-all shadow-[0_0_10px_rgba(244,63,94,0.1)] hover:shadow-[0_0_15px_rgba(244,63,94,0.4)]">
-                        <svg class="w-10 h-10 text-rose-400 mb-2 group-hover:scale-110 transition-transform" fill="none"
-                            stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z">
-                            </path>
-                        </svg>
-                        <span class="text-sm font-bold text-rose-300 tracking-widest uppercase">Export PDF</span>
-                        <span class="text-[10px] text-rose-500/70 mt-1">Formatted QA Document</span>
-                    </a>
+                
+                <div
+                    class="border-t border-slate-100 px-4 py-3 flex items-center justify-between flex-shrink-0 bg-slate-50">
+                    <span class="text-[11px] text-slate-500">
+                        <span id="pageInfo">페이지 1 / 1</span>
+                    </span>
+                    <div class="flex items-center space-x-1" id="pagination"></div>
                 </div>
             </div>
 
-        </div>
-    </main>
-
-    <!-- Time-Machine Replay Modal -->
-    <div id="replayModal"
-        class="hidden fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-[100] flex items-center justify-center p-4 transition-opacity">
-        <div
-            class="bg-slate-800 border-2 border-cyan-500/50 rounded-xl shadow-[0_0_30px_rgba(34,211,238,0.2)] w-full max-w-4xl flex flex-col overflow-hidden relative">
-            <div class="scan-line opacity-30"></div>
-            <!-- Header -->
-            <div class="flex justify-between items-center p-4 border-b border-cyan-900/50 bg-slate-900/50">
-                <div class="flex items-center space-x-3">
-                    <svg class="w-6 h-6 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                    <h2 class="text-lg font-bold text-cyan-300 uppercase tracking-widest">Time-Machine <span
-                            class="text-white">Replay</span></h2>
+            
+            <div id="replayPanel"
+                class="w-72 bg-white rounded-xl border border-slate-200 shadow-sm flex-col hidden flex-shrink-0">
+                <div class="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
+                    <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Time-Machine Replay</h3>
+                    <button onclick="closeReplay()" class="text-slate-400 hover:text-slate-600">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
                 </div>
-                <button onclick="closeReplay()" class="text-slate-400 hover:text-red-400 transition-colors">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
-                        </path>
-                    </svg>
-                </button>
-            </div>
-
-            <!-- Body -->
-            <div class="p-6 grid grid-cols-2 gap-6 bg-black/40">
-                <!-- Video/Image Box -->
-                <div class="flex flex-col space-y-2">
-                    <div class="text-[10px] text-cyan-500 uppercase font-bold tracking-wider">Recorded Frame</div>
+                <div class="p-4 flex-1 overflow-y-auto">
+                    
                     <div
-                        class="relative bg-black rounded-lg border border-slate-700 aspect-video flex items-center justify-center overflow-hidden">
+                        class="bg-slate-900 rounded-lg aspect-video mb-4 flex items-center justify-center overflow-hidden relative">
                         <img id="replayImage" class="w-full h-full object-contain hidden" alt="Replay Frame" />
-                        <div id="replayLoading" class="text-cyan-700 animate-pulse text-xs">Loading footage...</div>
+                        <div id="replayLoading" class="text-slate-500 text-xs text-center">
+                            <svg class="w-8 h-8 mx-auto mb-2 opacity-30" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            항목을 선택하세요
+                        </div>
                     </div>
-                </div>
-
-                <!-- Info Box -->
-                <div class="flex flex-col space-y-4">
-                    <div class="text-[10px] text-cyan-500 uppercase font-bold tracking-wider">Incident Details</div>
-                    <div class="bg-slate-900/50 rounded-lg border border-slate-700 p-4 text-sm font-mono space-y-4">
-                        <div class="flex justify-between border-b border-slate-700/50 pb-2">
-                            <span class="text-slate-500">Log ID</span>
-                            <span id="replayId" class="text-white font-bold">#----</span>
+                    
+                    <div class="space-y-2 text-xs">
+                        <div class="flex justify-between py-1.5 border-b border-slate-100">
+                            <span class="text-slate-400 font-medium">로그 ID</span>
+                            <span id="replayId" class="font-bold text-slate-700">—</span>
                         </div>
-                        <div class="flex justify-between border-b border-slate-700/50 pb-2">
-                            <span class="text-slate-500">Timestamp</span>
-                            <span id="replayTime" class="text-cyan-300">--:--:--</span>
+                        <div class="flex justify-between py-1.5 border-b border-slate-100">
+                            <span class="text-slate-400 font-medium">시각</span>
+                            <span id="replayTime" class="font-mono text-slate-700">—</span>
                         </div>
-                        <div class="flex justify-between border-b border-slate-700/50 pb-2">
-                            <span class="text-slate-500">Camera</span>
-                            <span id="replayCam" class="text-slate-300">CAM-XX</span>
+                        <div class="flex justify-between py-1.5 border-b border-slate-100">
+                            <span class="text-slate-400 font-medium">카메라</span>
+                            <span id="replayCam" class="text-slate-700">—</span>
                         </div>
-                        <div class="flex justify-between border-b border-slate-700/50 pb-2">
-                            <span class="text-slate-500">Detection</span>
-                            <span id="replayLabel" class="text-red-400 font-bold uppercase">NG</span>
+                        <div class="flex justify-between py-1.5 border-b border-slate-100">
+                            <span class="text-slate-400 font-medium">검출 레이블</span>
+                            <span id="replayLabel" class="font-bold text-red-600">—</span>
                         </div>
-                        <div class="flex justify-between border-b border-slate-700/50 pb-2">
-                            <span class="text-slate-500">Confidence</span>
-                            <span id="replayConf" class="text-white">--%</span>
+                        <div class="flex justify-between py-1.5">
+                            <span class="text-slate-400 font-medium">신뢰도</span>
+                            <span id="replayConf" class="font-bold text-blue-600">—</span>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </main>
     </div>
 
     <script>
-        let ratioChart = null;
-        let yieldChart = null;
-        let heatmapChart = null;
+        let allData = [];
+        let filteredData = [];
+        let currentPage = 1;
+        const pageSize = 20;
 
-        function initCharts() {
-            // Doughnut Chart (Ratio)
-            const ctxRatio = document.getElementById('ratioChart').getContext('2d');
-            ratioChart = new Chart(ctxRatio, {
-                type: 'doughnut',
-                data: {
-                    labels: ['OK', 'DEFECT'],
-                    datasets: [{
-                        data: [0, 0],
-                        backgroundColor: ['rgba(34, 211, 238, 0.8)', 'rgba(248, 113, 113, 0.8)'],
-                        borderColor: ['rgba(34, 211, 238, 1)', 'rgba(248, 113, 113, 1)'],
-                        borderWidth: 2,
-                        hoverOffset: 4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    cutout: '75%',
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: { color: '#94a3b8', font: { family: "'Courier New', monospace", size: 10 } }
-                        }
-                    }
-                }
-            });
-
-            // Line Chart (Yield Monitoring)
-            const ctxYield = document.getElementById('yieldChart').getContext('2d');
-            yieldChart = new Chart(ctxYield, {
-                type: 'line',
-                data: {
-                    labels: [],
-                    datasets: [
-                        {
-                            label: 'Total Detections',
-                            data: [],
-                            borderColor: 'rgba(56, 189, 248, 0.5)',
-                            backgroundColor: 'rgba(56, 189, 248, 0.1)',
-                            borderWidth: 2,
-                            tension: 0.3,
-                            fill: true,
-                            yAxisID: 'y'
-                        },
-                        {
-                            label: 'Defect Count',
-                            data: [],
-                            borderColor: 'rgba(244, 63, 94, 1)',
-                            backgroundColor: 'rgba(244, 63, 94, 0.2)',
-                            borderWidth: 2,
-                            tension: 0.3,
-                            fill: true,
-                            yAxisID: 'y1'
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    interaction: { mode: 'index', intersect: false },
-                    scales: {
-                        x: { grid: { color: 'rgba(15, 23, 42, 0.5)' }, ticks: { color: '#64748b', font: { size: 10 } } },
-                        y: { type: 'linear', display: true, position: 'left', grid: { color: 'rgba(30, 41, 59, 0.5)' }, ticks: { color: '#64748b' } },
-                        y1: { type: 'linear', display: true, position: 'right', grid: { drawOnChartArea: false }, ticks: { color: '#f43f5e' } }
-                    },
-                    plugins: { legend: { labels: { color: '#94a3b8', font: { size: 10 } } } }
-                }
-            });
-
-            // Bar Chart (Heatmap)
-            const ctxHeatmap = document.getElementById('heatmapChart').getContext('2d');
-            heatmapChart = new Chart(ctxHeatmap, {
-                type: 'bar',
-                data: {
-                    labels: [],
-                    datasets: [{
-                        label: 'Defects by Camera',
-                        data: [],
-                        backgroundColor: 'rgba(234, 179, 8, 0.8)',
-                        borderColor: 'rgba(234, 179, 8, 1)',
-                        borderWidth: 1,
-                        borderRadius: 4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        x: { grid: { display: false }, ticks: { color: '#64748b' } },
-                        y: { grid: { color: 'rgba(30, 41, 59, 0.5)' }, ticks: { color: '#64748b' } }
-                    },
-                    plugins: { legend: { display: false } }
-                }
-            });
-        }
-
-        function formatTime(dateStr) {
-            const date = new Date(dateStr);
-            return date.toLocaleString('en-US', { hour12: false, month: 'short', day: '2-digit', hour: "2-digit", minute: "2-digit", second: "2-digit" }).replace(',', '');
-        }
-
-        async function fetchRecentLogs() {
+        async function fetchAllData() {
             try {
-                const response = await fetch('/api/history/recent');
-                const data = await response.json();
-
-                let okCount = 0;
-                let defectCount = 0;
-                const tbody = document.getElementById('historyTableBody');
-                tbody.innerHTML = '';
-
-                if (data.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-slate-500 italic">No recent detection logs found.</td></tr>';
-                }
-
-                data.forEach(log => {
-                    const tr = document.createElement('tr');
-                    tr.className = 'hover:bg-cyan-900/10 cursor-pointer transition-colors';
-                    tr.onclick = () => openReplay(log); // LINK TO TIME-MACHINE MODAL
-
-                    const isDefect = log.defect;
-                    if (isDefect) defectCount++; else okCount++;
-
-                    const statusHtml = isDefect
-                        ? '<span class="px-2 py-0.5 rounded-full text-[10px] uppercase font-bold bg-red-900/50 text-red-400 border border-red-500/30 shadow-[0_0_5px_rgba(248,113,113,0.3)]">DEFECT</span>'
-                        : '<span class="px-2 py-0.5 rounded-full text-[10px] uppercase font-bold bg-cyan-900/50 text-cyan-400 border border-cyan-500/30 shadow-[0_0_5px_rgba(34,211,238,0.3)]">OK</span>';
-
-                    const scoreHtml = (log.confidence * 100).toFixed(1) + '%';
-
-                    tr.innerHTML = `
-                        <td class="px-4 py-3 text-slate-500 font-mono">#${log.id || ''}</td>
-                        <td class="px-4 py-3 text-slate-400">${formatTime(log.timestamp)}</td>
-                        <td class="px-4 py-3 text-cyan-200">${log.cameraId || ''}</td>
-                        <td class="px-4 py-3 font-bold ${isDefect ? 'text-red-300' : 'text-slate-200'}">${log.label || 'unknown'}</td>
-                        <td class="px-4 py-3 text-cyan-400">${scoreHtml}</td>
-                        <td class="px-4 py-3">${statusHtml}</td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-
-                // Update Doughnut
-                if (ratioChart) {
-                    ratioChart.data.datasets[0].data = [okCount, defectCount];
-                    ratioChart.update();
-                }
-
-                const total = okCount + defectCount;
-                document.getElementById('totalCount').innerText = total;
-                document.getElementById('defectRate').innerText = total > 0 ? ((defectCount / total) * 100).toFixed(1) + '%' : '0%';
-
-            } catch (error) { console.error("Failed to fetch logs:", error); }
+                const res = await fetch('/api/history/recent?limit=500');
+                if (!res.ok) throw new Error('API Error');
+                allData = await res.json();
+                document.getElementById('totalCount').textContent = allData.length;
+                applyFilters();
+            } catch (e) {
+                document.getElementById('historyTableBody').innerHTML =
+                    '<tr><td colspan="7" class="px-4 py-8 text-center text-red-400 text-xs">데이터 로드 실패. 서버 연결을 확인하세요.</td></tr>';
+            }
         }
 
-        // --- Time-Machine Replay Logic ---
-        function openReplay(log) {
-            document.getElementById('replayModal').classList.remove('hidden');
+        function applyFilters() {
+            const cam = document.getElementById('filterCamera').value;
+            const status = document.getElementById('filterStatus').value;
+            const search = document.getElementById('filterSearch').value.toLowerCase();
+            filteredData = allData.filter(r => {
+                if (cam && r.cameraId !== cam) return false;
+                if (status && r.status !== status) return false;
+                if (search && !(r.label || '').toLowerCase().includes(search)) return false;
+                return true;
+            });
+            document.getElementById('totalCount').textContent = filteredData.length;
+            currentPage = 1;
+            renderTable();
+            renderPagination();
+        }
 
-            // Populate Modal Fields
-            document.getElementById('replayId').innerText = `#${log.id}`;
-            document.getElementById('replayTime').innerText = formatTime(log.timestamp);
-            document.getElementById('replayCam').innerText = log.cameraId || 'Unknown';
-            document.getElementById('replayLabel').innerText = (log.label || 'Unknown').toUpperCase();
-            document.getElementById('replayConf').innerText = (log.confidence * 100).toFixed(1) + '%';
+        function renderTable() {
+            const tbody = document.getElementById('historyTableBody');
+            const start = (currentPage - 1) * pageSize;
+            const pageData = filteredData.slice(start, start + pageSize);
+            if (pageData.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="px-4 py-8 text-center text-slate-400 text-xs">검색 결과가 없습니다.</td></tr>';
+                return;
+            }
+            tbody.innerHTML = pageData.map(r => {
+                const isDefect = r.status === 'DEFECT' || (r.label || '').toLowerCase().includes('defect') || (r.label || '').toLowerCase().includes('ng');
+                const statusBadge = isDefect
+                    ? '<span class="status-ng text-[10px] font-bold px-2 py-0.5 rounded-full">DEFECT</span>'
+                    : '<span class="status-ok text-[10px] font-bold px-2 py-0.5 rounded-full">OK</span>';
+                const conf = r.confidence != null ? (r.confidence * (r.confidence <= 1 ? 100 : 1)).toFixed(1) : '—';
+                const confColor = isDefect ? 'text-red-600 font-bold' : 'text-slate-700';
+                const ts = r.timestamp ? new Date(r.timestamp).toLocaleString('ko-KR') : '—';
+                return `<tr class="table-row cursor-pointer" onclick="openReplay(${JSON.stringify(r).replace(/"/g, '&quot;')})">
+                    <td class="px-4 py-2.5 text-[11px] font-mono text-slate-400">#${r.id || '—'}</td>
+                    <td class="px-4 py-2.5 text-[11px] font-mono text-slate-600">${ts}</td>
+                    <td class="px-4 py-2.5 text-[11px] font-semibold text-blue-600">${r.cameraId || '—'}</td>
+                    <td class="px-4 py-2.5 text-[11px] text-slate-700 font-medium truncate">${r.label || '—'}</td>
+                    <td class="px-4 py-2.5 text-[11px] ${confColor}">${conf}%</td>
+                    <td class="px-4 py-2.5">${statusBadge}</td>
+                    <td class="px-4 py-2.5">
+                        <button class="text-[10px] text-blue-600 hover:text-blue-800 font-semibold hover:underline">▶ 재생</button>
+                    </td>
+                </tr>`;
+            }).join('');
+        }
 
-            const isDefect = log.defect;
-            const labelEl = document.getElementById('replayLabel');
-            labelEl.className = isDefect ? "text-red-400 font-bold uppercase" : "text-cyan-400 font-bold uppercase";
+        function renderPagination() {
+            const totalPages = Math.max(1, Math.ceil(filteredData.length / pageSize));
+            document.getElementById('pageInfo').textContent = `페이지 ${currentPage} / ${totalPages}`;
+            const pg = document.getElementById('pagination');
+            let html = '';
+            html += `<button class="page-btn ${currentPage === 1 ? 'disabled' : ''}" onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>‹</button>`;
+            const range = [];
+            for (let i = Math.max(1, currentPage - 2); i <= Math.min(totalPages, currentPage + 2); i++) range.push(i);
+            range.forEach(p => {
+                html += `<button class="page-btn ${p === currentPage ? 'active' : ''}" onclick="changePage(${p})">${p}</button>`;
+            });
+            html += `<button class="page-btn ${currentPage === totalPages ? 'disabled' : ''}" onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>›</button>`;
+            pg.innerHTML = html;
+        }
 
-            const imgEl = document.getElementById('replayImage');
-            const loadingEl = document.getElementById('replayLoading');
+        function changePage(p) {
+            const totalPages = Math.ceil(filteredData.length / pageSize);
+            if (p < 1 || p > totalPages) return;
+            currentPage = p;
+            renderTable();
+            renderPagination();
+        }
 
-            imgEl.classList.add('hidden');
-            loadingEl.classList.remove('hidden');
-
-            // Fetch Frame Image from new API endpoint
-            fetch(`/api/history/report/defect/${log.id}/frame`)
-                .then(res => {
-                    if (!res.ok) throw new Error("Frame not found");
-                    return res.blob();
-                })
-                .then(blob => {
-                    imgEl.src = URL.createObjectURL(blob);
-                    imgEl.classList.remove('hidden');
-                    loadingEl.classList.add('hidden');
-                })
-                .catch(e => {
-                    loadingEl.innerText = "No recorded footage available.";
-                    loadingEl.classList.remove('animate-pulse');
-                    loadingEl.classList.add('text-red-500');
-                });
+        function openReplay(r) {
+            const panel = document.getElementById('replayPanel');
+            panel.classList.remove('hidden');
+            panel.classList.add('flex');
+            document.getElementById('replayId').textContent = '#' + (r.id || '—');
+            document.getElementById('replayTime').textContent = r.timestamp ? new Date(r.timestamp).toLocaleString('ko-KR') : '—';
+            document.getElementById('replayCam').textContent = r.cameraId || '—';
+            document.getElementById('replayLabel').textContent = r.label || '—';
+            document.getElementById('replayConf').textContent = r.confidence != null ? (r.confidence * (r.confidence <= 1 ? 100 : 1)).toFixed(1) + '%' : '—';
+            const img = document.getElementById('replayImage');
+            const loading = document.getElementById('replayLoading');
+            img.classList.add('hidden'); loading.classList.remove('hidden');
+            if (r.imagePath) {
+                img.src = '/api/history/image/' + r.id;
+                img.onload = () => { img.classList.remove('hidden'); loading.classList.add('hidden'); };
+                img.onerror = () => { loading.textContent = '이미지를 불러올 수 없습니다.'; };
+            }
         }
 
         function closeReplay() {
-            document.getElementById('replayModal').classList.add('hidden');
-            const imgEl = document.getElementById('replayImage');
-            imgEl.src = ""; // Free memory
+            const panel = document.getElementById('replayPanel');
+            panel.classList.add('hidden'); panel.classList.remove('flex');
         }
-        // ---------------------------------
 
-        async function fetchYieldStats() {
+        async function cleanUpDatabase() {
+            if (!confirm('모든 검출 이력을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) return;
             try {
-                const response = await fetch('/api/history/stats/yield');
-                const data = await response.json();
-
-                if (yieldChart && data.length > 0) {
-                    const labels = data.map(d => d.hour + 'H');
-                    const totals = data.map(d => d.total_count);
-                    const defects = data.map(d => d.defect_count);
-
-                    yieldChart.data.labels = labels;
-                    yieldChart.data.datasets[0].data = totals;
-                    yieldChart.data.datasets[1].data = defects;
-                    yieldChart.update();
-                }
-            } catch (error) { console.error("Failed to fetch yield stats:", error); }
+                const res = await fetch('/api/history/cleanup', { method: 'DELETE' });
+                if (res.ok) { alert('이력이 초기화되었습니다.'); fetchAllData(); }
+                else { const t = await res.text(); alert('초기화 실패: ' + t); }
+            } catch (e) { alert('서버 연결 오류: ' + e.message); }
         }
 
-        async function fetchHeatmapStats() {
-            try {
-                const response = await fetch('/api/history/stats/heatmap');
-                const data = await response.json();
-
-                if (heatmapChart && data.length > 0) {
-                    heatmapChart.data.labels = data.map(d => d.camera_id || 'Unknown');
-                    heatmapChart.data.datasets[0].data = data.map(d => d.defect_count);
-                    heatmapChart.update();
-                }
-            } catch (error) { console.error("Failed to fetch heatmap stats:", error); }
-        }
-
-        function fetchAllData() {
-            fetchRecentLogs();
-            fetchYieldStats();
-            fetchHeatmapStats();
-        }
-
-        window.addEventListener('load', () => {
-            initCharts();
-            fetchAllData();
-            // Automatically refresh every 10 seconds
-            setInterval(fetchAllData, 10000);
-        });
+        window.addEventListener('load', fetchAllData);
     </script>
 </body>
 

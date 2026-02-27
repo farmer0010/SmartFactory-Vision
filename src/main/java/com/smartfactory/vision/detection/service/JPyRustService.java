@@ -29,7 +29,7 @@ public class JPyRustService {
     @PostConstruct
     public void init() {
         log.info("[Multi-Stream] Initializing Process Pool Manager in {}", workDir);
-        // Bridges are now lazy-loaded
+
     }
 
     @PreDestroy
@@ -81,8 +81,7 @@ public class JPyRustService {
                 }
 
                 String result = new String(resultBytes, StandardCharsets.UTF_8);
-                
-                // Wrap raw array from Python into `{"detections": [...]}` if it's just an array
+
                 if (result.trim().startsWith("[")) {
                      result = "{\"detections\":" + result + "}";
                 }
