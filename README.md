@@ -1,6 +1,6 @@
 # 🏭 SmartFactory-Vision Ver 1.4.0
 
-![Dashboard AI Copilot](file:///C:/Users/%EA%B9%80%EC%A3%BC%EC%98%81/.gemini/antigravity/brain/23b4502f-b271-4078-b8a2-0dadbdb60b07/dashboard_with_copilot_1772154454731_1772181232622.png)
+![Dashboard AI Copilot](docs/assets/dashboard_with_copilot.png)
 > **"Real-Time AI-Powered Factory Inspection System: Multi-Stream Architecture via JPyRust"**<br>
 > An intelligent smart factory platform fully equipped with live webcam feeds, ultra-high-speed AI inference (JPyRust), real-time monitoring (3D Digital Twin), and **integration with physical machinery control networks (Soft-PLC)**.
 
@@ -230,7 +230,7 @@ erDiagram
 * **Intelligent Assistant:** Floating chat widget on the dashboard leverages Google Gemini 2.5 Flash.
 * **Database & RAG Integration:** The AI agent autonomously invokes Spring Boot REST APIs using HTTP Basic Auth to fetch live daily defect reports and parses FAISS vector DB manuals to instruct operators on Error Codes and E-Stop recovery methods.
 
-![Admin Audit Logs](file:///C:/Users/%EA%B9%80%EC%A3%BC%EC%98%81/.gemini/antigravity/brain/23b4502f-b271-4078-b8a2-0dadbdb60b07/admin_audit_logs_1772181262861.png)
+![Admin Audit Logs](docs/assets/admin_audit_logs.png)
 
 ### 8. 🚨 Full-Stack Observability & Real-Time Alerts
 * **Audit Tracing:** Captures strict `AuditLog` JPA entities tracking Admin logins, system purges, and modifications.

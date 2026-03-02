@@ -1,6 +1,6 @@
 # 🏭 SmartFactory-Vision Ver 1.4.0
 
-![Dashboard AI Copilot](file:///C:/Users/%EA%B9%80%EC%A3%BC%EC%98%81/.gemini/antigravity/brain/23b4502f-b271-4078-b8a2-0dadbdb60b07/dashboard_with_copilot_1772154454731_1772181232622.png)
+![Dashboard AI Copilot](docs/assets/dashboard_with_copilot.png)
 > **"실시간 AI 기반 공장 검사 시스템: JPyRust를 이용한 멀티 스트림 아키텍처"**<br>
 > 사용자의 웹캠 피드, 초고속 AI 추론(JPyRust), 실시간 모니터링(3D 디지털 트윈), 그리고 **시스템의 실물 제어망(Soft-PLC)**을 모두 갖춘 지능형 스마트 팩토리 플랫폼입니다.
 
@@ -231,7 +231,7 @@ erDiagram
 * **지능형 비서:** 대시보드 하단의 챗봇 위젯을 통해 구글 Gemini 2.5 Flash를 대화형으로 호출합니다.
 * **다이나믹 도구 연동 (RAG+DB):** AI가 스스로 질문을 분석하여, REST API에 접속해 금일 불량 통계를 조회하거나, FAISS 벡터 데이터베이스에 저장된 공장 매뉴얼 가이드(`factory_manual.txt`)를 읽어 E-Stop 해제 및 404 에러 대응법을 사용자에게 브리핑합니다.
 
-![Admin Audit Logs](file:///C:/Users/%EA%B9%80%EC%A3%BC%EC%98%81/.gemini/antigravity/brain/23b4502f-b271-4078-b8a2-0dadbdb60b07/admin_audit_logs_1772181262861.png)
+![Admin Audit Logs](docs/assets/admin_audit_logs.png)
 
 ### 8. 🚨 실시간 보안 감사 및 웹소켓 알림 시스템
 * **스프링 감사 로그 (Audit Tracing):** 관리자의 로그인, 시스템 초기화 내역을 감지하여 DB Entity에 영구 저장 및 패널에 출력합니다.
