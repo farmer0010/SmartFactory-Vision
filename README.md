@@ -18,6 +18,9 @@
 
 **SmartFactory-Vision** is a practical, real-time AI vision inspection system built on the extreme stability of the **Spring Boot** ecosystem combined with the native AI speed of **JPyRust**.
 
+> 💡 **Powered by Custom Core Technology: JPyRust**
+> The core AI inference pipeline of this project is driven by **[JPyRust](https://github.com/farmer0010/JPyRust)**, an independent Native IPC library exclusively designed and developed by the author of this repository. It completely eliminates the heavy network socket communication bottlenecks between Java and Python, achieving ultra-high-speed Zero-Copy data transfers based on C++ Shared Memory limits.
+
 This is not just a blinking monitoring dashboard. It completes parallel image inference across a 4-channel multi-stream environment, and the moment a defect is detected, it immediately controls the switches of actual factory equipment (PLC) to isolate defective products. Furthermore, all detection and control histories are securely backed up in a database, making it a **Full-Stack industrial solution** where administrators can perfectly control all statistics of the production line through a 3D digital twin space and an interactive AI Copilot.
 
 ---
