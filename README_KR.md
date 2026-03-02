@@ -14,11 +14,11 @@
 
 ---
 
-## 💡 소개 (Introduction)
+## 💡 개요 (Introduction)
 
-**SmartFactory-Vision**은 **Spring Boot**와 **JPyRust**를 결합하여 네이티브 수준의 성능을 제공하는 실시간 AI 비전 검사 시스템입니다. 
+**SmartFactory-Vision**은 **Spring Boot** 생태계의 지독한 안정성과 **JPyRust**의 네이티브 AI 속도를 결합한 **실전형 실시간 AI 비전 검사 시스템**입니다. 
 
-기존의 단순 모니터링을 넘어서, 4채널 멀티 스트림 환경에서 병렬 이미지 추론을 수행하며, 감지 이력을 DB에 저장하고, 실물 공장 설비(PLC)와 연동하여 불량 발생 시 물리적인 액션을 즉각 트리거하는 Full-Stack 산업 솔루션입니다.
+단순히 화면만 깜빡이는 모니터링 대시보드가 아닙니다. 4채널 멀티 스트림 환경에서 병렬 이미지 추론을 완수하고, 결함을 찾아내는 즉시 실물 공장 설비(PLC)의 스위치를 제어해 불량품을 격리합니다. 또한 모든 감지 및 제어 이력은 데이터베이스에 안전하게 백업되며, 관리자는 3D 디지털 트윈 공간과 대화형 AI Copilot을 통해 라인의 모든 통계를 완벽히 통제할 수 있는 **풀스택(Full-Stack) 산업 솔루션**입니다.
 
 ---
 
@@ -239,58 +239,69 @@ erDiagram
 
 <br>
 
-## ⚙️ Setup & Run
+## ⚙️ 실전 구축 가이드 (Setup & Run)
 
-### 1. 요구 사항 및 사전 설정
-* **OS:** Windows 환경 (Shared Memory Native DLL 호환성)
-* **Python 디렉토리:** JPyRust 엔진을 위해 `C:\Users\{사용자명}\.jpyrust\python_dist` 경로 환경이 구성되어 있어야 합니다.
+이 프로젝트는 단순한 데모가 아닌 **실물 공장 제어망(PLC)과 연동되는 시스템**입니다. 
+따라서 처음 로컬 저장소에 클론(Clone)한 뒤, 환경 변수와 카메라 세팅을 정확히 구성해야 정상 작동합니다.
 
-### 2. Database 연결 (MariaDB)
-`src/main/resources/application.yml` 내 DB 정보가 MariaDB를 바라보고 있습니다.
-* URL: `jdbc:mariadb://localhost:3306/smartfactory`
-* 기본 User: `root` (비밀번호 없음 설정)
-* *(테스트 목적으로만 구동하려면 url을 h2 파일 시스템으로 롤백하거나 MariaDB 서비스를 설치하세요.)*
+### 1. 📥 내려받기 및 필수 권한
+```bash
+git clone https://github.com/farmer0010/SmartFactory-Vision.git
+cd SmartFactory-Vision
+```
+> **⚠️ JPyRust 권한 주의:** 
+> Windows 환경에서 Native DLL 기반의 Shared Memory를 사용하므로, Python 폴더(`C:\Users\{사용자명}\.jpyrust\python_dist`)가 세팅되어 있어야 합니다. 필요시 Windows Defender 예외 처리를 권장합니다.
 
-### 3. Modbus Slave (mdslave) 구동 가이드 🚀
-프로젝트에서 불량 감지 시 실제 산업용 PLC와 연동하는 로직을 점검하기 위해, **Modbus 시뮬레이터(mdslave)**가 반드시 백그라운드에 띄워져 있어야 합니다.
+### 2. 🔐 환경 변수 및 설정 파일 (`.env` / `application.yml`)
+보안을 위해 소스코드 내에 중요한 키를 임의로 기입하지 마십시오. 백엔드를 구동하기 전 다음 설정들을 맞춰야 합니다.
 
-1. **라이브러리 추가:** Python(로컬 또는 가상환경)을 통해 Modbus 라이브러리를 설치합니다.
+- **AI Copilot (Gemini API) 엑세스:**
+  시스템 환경 변수(Environment Variables)에 다음 두 가지를 반드시 등록하세요.
+  ```env
+  GEMINI_API_KEY=당신의_구글_제미나이_API_키
+  SPRING_BASE_URL=http://localhost:8080
+  ```
+- **데이터베이스 (MariaDB):**
+  `src/main/resources/application.yml` 파일을 열어 운영할 DB 정보를 기입합니다.
+  (기본값은 `jdbc:mariadb://localhost:3306/smartfactory`, 계정 `root`, 비밀번호 `smartfactory_pass` 형식으로 구성하는 것을 권장합니다.)
+
+### 3. 📹 카메라 채널 및 스트림 설정
+기본적으로 4분할 화면(2x2 그리드)으로 구성되어 있습니다.
+운영 환경에 맞추어 `src/main/java/com/smartfactory/vision/stream/controller/WebcamController.java` 또는 프론트엔드 HTML 측에서 스트림 소스를 RTSP 주소나 `/dev/video0` 규격으로 수정하세요.
+> **주의:** 최초 접속 시 브라우저에서 **"카메라 사용 권한"**을 반드시 허용해 주어야 캡처 로직이 가동을 시작합니다.
+
+### 4. 🚀 Modbus Slave (mdslave) 구동 가이드
+프로젝트에서 불량 감지 시 실제 산업용 PLC와 연동하는 로직을 점검하기 위해, **가상의 Modbus 시뮬레이터(mdslave)**가 반드시 백그라운드에 띄워져 있어야 400에러를 뿜지 않습니다.
+
+1. Python 환경에서 `pyModbusTCP` 설치:
    ```bash
    pip install pyModbusTCP
    ```
-2. **시뮬레이터 스크립트 실행:** 아래 코드를 복사하여 `mdslave.py` 로 저장하고 실행합니다. 포트는 일반적인 PLC 표준인 `502`로 설정되며, 루프백 주소 `127.0.0.1`에 바인딩됩니다.
+2. 다음 코드를 `mdslave.py`로 저장 후 실행하면 로컬 포트 502번이 개방됩니다.
    ```python
    from pyModbusTCP.server import ModbusServer
-   # 127.0.0.1 (로컬호스트) 포트 502로 서버 오픈
    server = ModbusServer(host="127.0.0.1", port=502, no_block=True)
-   
-   try:
-       print("Modbus Slave Server 동작 중... (Port: 502)")
-       server.start()
-       while True:
-           # 주기적으로 모니터링 하거나 상시 대기
-           pass
-   except KeyboardInterrupt:
-       server.stop()
-       print("서버 중지됨")
+   print("Modbus Slave Server 동작 중... (Port: 502)")
+   server.start()
+   while True: pass
    ```
-3. **가동 확인:** 백엔드 콘솔과 Spring MVC가 동작 중 결함을 판정하면 "PLC trigger success" 또는 Coil 상태가 변경되었음을 백엔드 로그창에서 확인할 수 있습니다.
 
-### 4. 빌드 및 애플리케이션 시작
+### 5. 빌드 및 서버 가동
+통신 준비를 마쳤다면 Spring Boot 서버를 기동합니다.
 ```bash
-# 1. Gradle 빌드
+# 1. Gradle 빌드 (테스트 건너뛰기)
 gradlew.bat clean build -x test
 
-# 2. 애플리케이션 로드 (8080 포트)
+# 2. 애플리케이션 로드
 gradlew.bat bootRun
 ```
 
-### 5. 주요 접속 엔드포인트
+### 6. 주요 접속 엔드포인트
 * **메인 관제 대시보드:** `http://localhost:8080/`
-* **3D 디지털 트윈 单독뷰:** `http://localhost:8080/twin`
-* **시스템 이력 및 로그:** `http://localhost:8080/history` *(개발중)*
+* **3D 디지털 트윈 단독뷰:** `http://localhost:8080/twin`
+* **관리자 감사 로그 패널:** `http://localhost:8080/admin/audit`
 
-> **Tip:** 브라우저 첫 접근 시 "카메라 사용 권한"을 먼저 허용해 주시면 즉각 4분할 스트림 시뮬레이션이 가동됩니다. 하단의 가상 테스트 "Simulate Defect" 버튼을 통해 Modbus 제어망과의 송수신 정상 작동 여부를 바로 점검해보세요!
+> **Tip:** 하단의 가상 테스트 **"Simulate Defect"** 버튼을 누르면, 실제 불량품을 흘려보내지 않아도 Modbus 제어망 송수신과 3D 트윈의 비상 점멸 로직이 잘 동작하는지 100% 안전하게 점검할 수 있습니다.
 
 <br>
 

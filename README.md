@@ -16,9 +16,9 @@
 
 ## 💡 Introduction
 
-**SmartFactory-Vision** is a real-time AI vision inspection system built on **Spring Boot** paired with **JPyRust** granting native-level Python inference velocities without sacrificing Java's ecosystem stability.
+**SmartFactory-Vision** is a practical, real-time AI vision inspection system built on the extreme stability of the **Spring Boot** ecosystem combined with the native AI speed of **JPyRust**.
 
-Going far beyond simple monitoring, it captures 4-channel multi-stream environments, conducts parallel image inferences, asynchronously stores detection histories into a Database, and tightly integrates with real-world physical machinery (PLC), immediately triggering physical actions upon defect detection. This is designed as a Full-Stack industrial solution.
+This is not just a blinking monitoring dashboard. It completes parallel image inference across a 4-channel multi-stream environment, and the moment a defect is detected, it immediately controls the switches of actual factory equipment (PLC) to isolate defective products. Furthermore, all detection and control histories are securely backed up in a database, making it a **Full-Stack industrial solution** where administrators can perfectly control all statistics of the production line through a 3D digital twin space and an interactive AI Copilot.
 
 ---
 
@@ -238,59 +238,69 @@ erDiagram
 
 <br>
 
-## ⚙️ Setup & Run
+## ⚙️ Practical Setup & Run Guide
 
-### 1. Requirements
-* **OS:** Windows Environment Required (Underpinned by Native JPyRust Shared Memory `.dll` bindings)
-* **Python Path:** Assure your directory conforms correctly to: `C:\Users\{USERNAME}\.jpyrust\python_dist`
+This project is not a simple demo, but a **system linked to actual physical factory control networks (PLC)**. 
+Therefore, after cloning it to your local repository for the first time, you must accurately configure the environment variables and camera settings for it to operate normally.
 
-### 2. Database Connection (MariaDB)
-The `src/main/resources/application.yml` anchors to a standard MariaDB installation.
-* Connection Target: `jdbc:mariadb://localhost:3306/smartfactory`
-* Credentials: `root` users, with blank passwords defaults.
-* *(Switch properties out for standard inline JVM H2 databases if local port hosting proves problematic)*
+### 1. 📥 Clone & Prerequisites
+```bash
+git clone https://github.com/farmer0010/SmartFactory-Vision.git
+cd SmartFactory-Vision
+```
+> **⚠️ JPyRust Permission Warning:** 
+> Since it uses Native DLL-based Shared Memory in a Windows environment, the Python directory (`C:\Users\{USERNAME}\.jpyrust\python_dist`) must be set up. Adding a Windows Defender exception is recommended if necessary.
 
-### 3. Modbus Slave Simulator Setups (`mdslave`) 🚀
-For simulating authentic factory logic, deploying an external Modbus Slave instance named `mdslave` is absolutely essential.
+### 2. 🔐 Environment Variables (`.env` / `application.yml`)
+Do not arbitrarily hardcode important keys in the source code for security reasons. Before running the backend, you must match the following settings:
 
-1. **Install Python Modbus Package:**
+- **AI Copilot (Gemini API) Access:**
+  You must register the following two variables in your System Environment Variables:
+  ```env
+  GEMINI_API_KEY=YOUR_GOOGLE_GEMINI_API_KEY
+  SPRING_BASE_URL=http://localhost:8080
+  ```
+- **Database (MariaDB):**
+  Open the `src/main/resources/application.yml` file and enter the DB information to be operated.
+  (The default is configured as `jdbc:mariadb://localhost:3306/smartfactory`, user `root`, and password `smartfactory_pass`. Please ensure you configure this for actual deployment.)
+
+### 3. 📹 Camera Channels & Stream Setup
+By default, the screen is configured in a 4-split view (2x2 grid).
+Modify the stream source to an RTSP address or `/dev/video0` specification in `src/main/java/com/smartfactory/vision/stream/controller/WebcamController.java` or the frontend HTML according to your operating environment.
+> **Note:** Upon your first connection, you must grant **"Camera Usage Permission"** in the browser for the capture logic to start operating.
+
+### 4. 🚀 Modbus Slave (mdslave) Simulation Guide
+To check the logic linked to the actual industrial PLC when a defect is detected, a **virtual Modbus simulator (mdslave)** MUST be running in the background to avoid 400 errors.
+
+1. Install `pyModbusTCP` in your Python environment:
    ```bash
    pip install pyModbusTCP
    ```
-2. **Execute Simulator Script:** Copy the block underneath and execute it as `mdslave.py`. It actively binds standard Modbus defaults onto port `502` using local loopback `127.0.0.1`.
+2. Save the following code as `mdslave.py` and run it to open local port 502:
    ```python
    from pyModbusTCP.server import ModbusServer
-   # Activating server on localhost port 502
    server = ModbusServer(host="127.0.0.1", port=502, no_block=True)
-   
-   try:
-       print("Modbus Slave Server Running... (Port: 502)")
-       server.start()
-       while True:
-           # Loop or logic handling area
-           pass
-   except KeyboardInterrupt:
-       server.stop()
-       print("Server shutdown")
+   print("Modbus Slave Server Running... (Port: 502)")
+   server.start()
+   while True: pass
    ```
-3. **Verify:** Upon testing defect signals, expect "PLC trigger success" readouts spanning across Spring Boot backend logging prompts.
 
-### 4. Build and Execute
-Ensure DBs and PLCs are properly initialized.
+### 5. Build & Execute
+Once communication preparations are complete, start the Spring Boot server.
 ```bash
-# 1. Start Gradle Compiler
+# 1. Gradle Build (Skip Tests)
 gradlew.bat clean build -x test
 
-# 2. Hot Run Application
+# 2. Run Application
 gradlew.bat bootRun
 ```
 
-### 5. Interaction Pointers
-* **Main Feed Analytics Control Dashboard:** `http://localhost:8080/`
-* **3D Virtual Twin Direct Views:** `http://localhost:8080/twin`
-* **Historic Logs DB Table:** `http://localhost:8080/history`
+### 6. Main Access Endpoints
+* **Main Control Dashboard:** `http://localhost:8080/`
+* **3D Digital Twin Standalone View:** `http://localhost:8080/twin`
+* **Admin Audit Log Panel:** `http://localhost:8080/admin/audit`
 
-> **Note:** Acknowledge security camera access over Chromium. Upon start, 4 individual cloned pipelines initiate. Hit "Test Defect Response" mapping to verify Modbus and WebGL red alert loops safely!
+> **Tip:** Clicking the **"Simulate Defect"** virtual test button at the bottom allows you to safely check 100% whether the Modbus control network transmission/reception and the 3D twin's emergency flashing logic are working properly, without having to drop actual defective products.
 
 <br>
 
